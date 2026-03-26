@@ -61,4 +61,9 @@ public class VisitRequest {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_doctor_id")
+    @Builder.Default
+    private User assignedDoctor = null;   // set by DispatchService, null until assigned
+
 }
