@@ -73,14 +73,14 @@ export default function Register() {
       <Navbar />
       <div className="flex justify-center py-12 px-4">
         <div className="max-w-md w-full">
-          <div className="bg-white rounded-lg p-8 border border-gray-200">
-            <div className="text-center mb-6">
+          <div className="bg-white rounded-lg p-8 border border-gray-200 animate-scale-in shadow-md hover:shadow-lg transition-all duration-200">
+            <div className="text-center mb-6 animate-fade-in">
               <h1 className="text-3xl font-bold text-slate-800 mb-2">Create Account</h1>
               <p className="text-gray-600">Create your account</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 animate-slide-in-up [animation-delay:100ms]">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   First Name
@@ -111,7 +111,7 @@ export default function Register() {
               </div>
             </div>
 
-            <div>
+            <div className="animate-slide-in-up [animation-delay:200ms]">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Email Address
               </label>
@@ -126,7 +126,7 @@ export default function Register() {
               />
             </div>
 
-            <div>
+            <div className="animate-slide-in-up [animation-delay:300ms]">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Phone Number
               </label>
@@ -156,7 +156,7 @@ export default function Register() {
               </div>
             </div>
 
-            <div>
+            <div className="animate-slide-in-up [animation-delay:400ms]">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 EGN (Bulgarian ID Number)
               </label>
@@ -173,7 +173,7 @@ export default function Register() {
               <p className="text-xs text-gray-500 mt-1">10-digit Bulgarian national ID number</p>
             </div>
 
-            <div>
+            <div className="animate-slide-in-up [animation-delay:500ms]">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Address / Location
               </label>
@@ -188,7 +188,7 @@ export default function Register() {
               />
             </div>
 
-            <div>
+            <div className="animate-slide-in-up [animation-delay:600ms]">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Password
               </label>
@@ -203,7 +203,7 @@ export default function Register() {
               />
             </div>
 
-            <div>
+            <div className="animate-slide-in-up [animation-delay:700ms]">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Confirm Password
               </label>
@@ -218,7 +218,7 @@ export default function Register() {
               />
             </div>
 
-            <label className="flex items-start">
+            <label className="flex items-start animate-slide-in-up [animation-delay:800ms]">
               <input
                 type="checkbox"
                 name="acceptTerms"
@@ -232,7 +232,7 @@ export default function Register() {
                 <button
                   type="button"
                   onClick={() => setIsTermsModalOpen(true)}
-                  className="text-teal-600 hover:text-teal-700 font-semibold cursor-pointer underline"
+                  className="text-teal-600 hover:text-teal-700 font-semibold cursor-pointer underline hover:scale-105 transition-all duration-200"
                 >
                   terms and conditions
                 </button>
@@ -246,15 +246,15 @@ export default function Register() {
 
             <button
               type="submit"
-              className="w-full bg-teal-600 text-white py-2 rounded-lg font-bold hover:bg-teal-700 transition mt-6"
+              className="w-full bg-teal-600 text-white py-2 rounded-lg font-bold hover:bg-teal-700 hover:scale-105 active:scale-95 transition-all duration-200 mt-6 animate-slide-in-up [animation-delay:900ms]"
             >
               Create Account
             </button>
             </form>
 
-            <p className="text-center text-gray-600 mt-6">
+            <p className="text-center text-gray-600 mt-6 animate-fade-in [animation-delay:1000ms]">
               Already have an account?{" "}
-              <Link to="/login" className="text-teal-600 hover:text-teal-700 font-bold">
+              <Link to="/login" className="text-teal-600 hover:text-teal-700 font-bold hover:underline hover:scale-105 transition-all duration-200">
                 Sign in here
               </Link>
             </p>
@@ -262,17 +262,9 @@ export default function Register() {
         </div>
       </div>
 
-      <footer className="bg-slate-800 border-t border-slate-900 mt-20">
-        <div className="max-w-4xl mx-auto px-4 py-6 text-center text-gray-300">
-          <p className="mb-4">&copy; 2025 InReach. Bringing healthcare to remote areas.</p>
-          <a
-            href="/terms"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-teal-400 hover:text-teal-300 underline transition text-sm"
-          >
-            Terms and Conditions
-          </a>
+      <footer className="bg-gray-100 border-t border-gray-200 mt-20 animate-fade-in">
+        <div className="max-w-4xl mx-auto px-4 py-8 text-center text-black">
+          <p>&copy; 2025 InReach. Bringing healthcare to remote areas.</p>
         </div>
       </footer>
     </div>
