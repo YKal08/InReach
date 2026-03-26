@@ -2,14 +2,14 @@
 # @default -- `{}` (See [values.yaml])
 ## Ref: https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/
 applications:
-  observability-prod-apps:
-    name: observability-prod-apps
+  inreach-apps:
+    name: inreach-apps
     namespace: argocd
     project: default
     source:
-      repoURL: git@gitlab.itgix.com:rnd/itgix-observability-projects/itgix-sre-platform/argocd.git
+      repoURL: git@github.com:YKal08/InReach.git
       targetRevision: main
-      path: .
+      path: helm
     destination:
       server: https://kubernetes.default.svc
       namespace: argocd
