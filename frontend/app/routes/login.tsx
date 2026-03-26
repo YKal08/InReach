@@ -2,6 +2,7 @@ import type { Route } from "./+types/login";
 import { Link } from "react-router";
 import { useState } from "react";
 import Navbar from "../components/Navbar";
+import { useEasyMode } from "../components/EasyModeContext";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -11,6 +12,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Login() {
+  const { isEasyMode } = useEasyMode();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -19,12 +21,59 @@ export default function Login() {
     console.log({ email, password });
   };
 
+  if (isEasyMode) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Navbar />
+        <div className="em-page">
+          <section className="em-card">
+            <h1 className="em-heading">Welcome Back</h1>
+            <p className="em-body">Sign in to your account.</p>
+            <form onSubmit={handleSubmit} className="em-form-grid">
+              <div>
+                <label htmlFor="em-email" className="em-label">Email Address</label>
+                <input
+                  id="em-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="em-input"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="em-password" className="em-label">Password</label>
+                <input
+                  id="em-password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="em-input"
+                  required
+                />
+              </div>
+              <div className="em-full-width">
+                <button type="submit" className="em-btn-primary w-full">Sign In</button>
+              </div>
+            </form>
+            <p className="em-body mt-6">
+              Don't have an account?{" "}
+              <Link to="/register" className="text-teal-700 font-bold underline">Register here</Link>
+            </p>
+          </section>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="flex justify-center py-12 px-4">
         <div className="max-w-md w-full">
-          <div className="bg-white rounded-lg p-8 border border-gray-200 animate-scale-in shadow-md hover:shadow-lg transition-all duration-200">
+          <div className="bg-white rounded-lg p-8 border border-gray-200 animate-scale-in shadow-md">
             <div className="text-center mb-8 animate-fade-in">
               <h1 className="text-3xl font-bold text-slate-800 mb-2">Welcome Back</h1>
               <p className="text-gray-600">Sign in to your account</p>
@@ -32,9 +81,7 @@ export default function Login() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="animate-slide-in-up [animation-delay:100ms]">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
                 <input
                   type="email"
                   value={email}
@@ -46,9 +93,7 @@ export default function Login() {
               </div>
 
               <div className="animate-slide-in-up [animation-delay:200ms]">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Password
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
                 <input
                   type="password"
                   value={password}

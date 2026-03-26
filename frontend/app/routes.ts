@@ -7,4 +7,6 @@ export default [
   route("terms", "routes/terms.tsx"),
   route("doctors", "routes/doctors.tsx"),
   route("home", "routes/home.tsx"),
+  route("request-doctor", "routes/request-doctor.tsx"),
+  route("pending-requests", "routes/pending-requests.tsx"),
 ] satisfies RouteConfig;

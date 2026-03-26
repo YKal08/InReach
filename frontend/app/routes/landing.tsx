@@ -36,17 +36,17 @@ export default function Landing() {
         <div className="space-y-4">
           <h2 className="text-2xl font-bold text-gray-900 mb-8 animate-fade-in">Why Choose InReach</h2>
           
-          <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-200 animate-slide-in-up [animation-delay:100ms]">
+          <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm transition-all duration-200 animate-slide-in-up [animation-delay:100ms]">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Qualified Medical Professionals</h3>
             <p className="text-gray-600">Access to verified and credentialed doctors who are committed to providing quality healthcare services to remote communities.</p>
           </div>
 
-          <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-200 animate-slide-in-up [animation-delay:200ms]">
+          <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm transition-all duration-200 animate-slide-in-up [animation-delay:200ms]">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Quick and Easy Setup</h3>
             <p className="text-gray-600">Simple registration process that takes just a few minutes. Start booking appointments and receiving care immediately after signing up.</p>
           </div>
 
-          <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-200 animate-slide-in-up [animation-delay:300ms]">
+          <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm transition-all duration-200 animate-slide-in-up [animation-delay:300ms]">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Secure and Private</h3>
             <p className="text-gray-600">Your health information is encrypted and protected. We follow strict privacy guidelines to ensure your data remains confidential.</p>
           </div>

@@ -6,9 +6,11 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import { useEffect } from "react";
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import { EasyModeProvider, useEasyMode } from "./components/EasyModeContext";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -41,8 +43,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function App() {
+function AppContent() {
+  const { isEasyMode } = useEasyMode();
+
+  useEffect(() => {
+    if (isEasyMode) {
+      document.documentElement.classList.add("easy-mode");
+    } else {
+      document.documentElement.classList.remove("easy-mode");
+    }
+  }, [isEasyMode]);
+
   return <Outlet />;
+}
+
+export default function App() {
+  return (
+    <EasyModeProvider>
+      <AppContent />
+    </EasyModeProvider>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

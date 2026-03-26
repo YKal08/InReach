@@ -1,5 +1,6 @@
 import type { Route } from "./+types/doctors";
 import Navbar from "../components/Navbar";
+import { useEasyMode } from "../components/EasyModeContext";
 import { useState, useMemo } from "react";
 
 interface Doctor {
@@ -17,12 +18,13 @@ interface Doctor {
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Our Doctors - InReach" },
+    { title: "Meet Our Specialists - InReach" },
     { name: "description", content: "Browse our network of healthcare professionals" },
   ];
 }
 
 export default function Doctors() {
+  const { isEasyMode } = useEasyMode();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
@@ -103,11 +105,9 @@ export default function Doctors() {
     },
   ];
 
-  // Extract unique specialties and locations for filters
   const specialties = Array.from(new Set(doctors.map((doc) => doc.specialty))).sort();
   const locations = Array.from(new Set(doctors.map((doc) => doc.location))).sort();
 
-  // Filter doctors based on search and selected filters
   const filteredDoctors = useMemo(() => {
     return doctors.filter((doctor) => {
       const matchesSearch =
@@ -115,7 +115,6 @@ export default function Doctors() {
         doctor.specialty.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesSpecialty = !selectedSpecialty || doctor.specialty === selectedSpecialty;
       const matchesLocation = !selectedLocation || doctor.location === selectedLocation;
-
       return matchesSearch && matchesSpecialty && matchesLocation;
     });
   }, [searchQuery, selectedSpecialty, selectedLocation]);
@@ -124,25 +123,21 @@ export default function Doctors() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 py-16">
-        <div className="mb-12 animate-fade-in">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4 animate-slide-in-down">Our Doctors</h1>
+      <div className={isEasyMode ? "em-page" : "max-w-7xl mx-auto px-4 py-4"}>
+        <div className="mb-6 animate-fade-in">
+          <h1 className="text-4xl font-bold text-gray-900 mt-2 mb-4 animate-slide-in-down">Meet Our Specialists</h1>
           <p className="text-lg text-gray-600 animate-slide-in-up [animation-delay:100ms]">
             Browse our network of dedicated healthcare professionals serving remote and underserved areas.
           </p>
         </div>
 
         {/* Search and Filters Section */}
-        <div className="mb-12 relative animate-slide-in-up [animation-delay:200ms]">
-          {/* Search Bar with Filter Toggle */}
+        <div className="mb-4 relative animate-slide-in-up [animation-delay:200ms]">
           <div className="bg-white rounded border border-gray-300 shadow-sm hover:shadow-md transition-all duration-200">
             <div className="flex items-center gap-2 px-3 py-2">
-              {/* Magnifying Glass Icon */}
               <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-              
-              {/* Search Input */}
               <input
                 type="text"
                 placeholder="Search doctors by name or specialty..."
@@ -150,8 +145,6 @@ export default function Doctors() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-1 px-2 py-2 focus:outline-none text-sm text-gray-900 placeholder-gray-500"
               />
-              
-              {/* Clear Search Button (X) */}
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
@@ -163,8 +156,6 @@ export default function Doctors() {
                   </svg>
                 </button>
               )}
-              
-              {/* Filter Button */}
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className="p-2 text-gray-600 hover:bg-gray-100 rounded transition flex items-center gap-1 text-sm font-medium"
@@ -176,10 +167,9 @@ export default function Doctors() {
               </button>
             </div>
 
-            {/* Filter Dropdown - Overlay */}
+            {/* Filter Dropdown */}
             {showFilters && (
-              <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg z-50 p-5 w-80 grid grid-cols-1 gap-5 animate-scale-in">
-                {/* Specialty Filter */}
+              <div className={`absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg z-50 p-5 animate-scale-in ${isEasyMode ? "w-full grid grid-cols-2 gap-5" : "w-80 grid grid-cols-1 gap-5"}`}>
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-2">Specialty</label>
                   <select
@@ -189,14 +179,11 @@ export default function Doctors() {
                   >
                     <option value="">All Specialties</option>
                     {specialties.map((specialty) => (
-                      <option key={specialty} value={specialty}>
-                        {specialty}
-                      </option>
+                      <option key={specialty} value={specialty}>{specialty}</option>
                     ))}
                   </select>
                 </div>
 
-                {/* Location Filter */}
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-2">Location</label>
                   <select
@@ -206,20 +193,14 @@ export default function Doctors() {
                   >
                     <option value="">All Locations</option>
                     {locations.map((location) => (
-                      <option key={location} value={location}>
-                        {location}
-                      </option>
+                      <option key={location} value={location}>{location}</option>
                     ))}
                   </select>
                 </div>
 
-                {/* Clear Filters Button */}
-                <div className="text-center pt-2 border-t border-gray-200">
+                <div className={`text-center pt-2 border-t border-gray-200 ${isEasyMode ? "col-span-2" : ""}`}>
                   <button
-                    onClick={() => {
-                      setSelectedSpecialty("");
-                      setSelectedLocation("");
-                    }}
+                    onClick={() => { setSelectedSpecialty(""); setSelectedLocation(""); }}
                     className="text-xs text-teal-600 hover:text-teal-700 font-semibold hover:scale-105 transition-all duration-200"
                   >
                     Clear Filters
@@ -233,52 +214,58 @@ export default function Doctors() {
         {/* Results Section */}
         {filteredDoctors.length > 0 ? (
           <>
-            <p className="text-xs text-gray-400 opacity-60 mb-6 animate-fade-in">Found {filteredDoctors.length} doctor{filteredDoctors.length !== 1 ? "s" : ""}</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredDoctors.map((doctor, index) => (
-            <div
-              key={doctor.id}
-              className="bg-white rounded-xl shadow-md hover:shadow-xl hover:scale-105 transition-all duration-200 border border-gray-200 overflow-hidden flex flex-col animate-slide-in-up"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              {/* Doctor Photo */}
-              <div className="w-full aspect-square bg-gradient-to-b from-teal-100 to-gray-100 overflow-hidden">
-                <img
-                  src={doctor.image}
-                  alt={doctor.name}
-                  className="w-full h-full object-cover"
-                />
+            <p className="text-xs text-gray-400 opacity-60 mb-6 animate-fade-in">
+              Found {filteredDoctors.length} doctor{filteredDoctors.length !== 1 ? "s" : ""}
+            </p>
+
+            {/* EASY MODE: Landscape list */}
+            {isEasyMode ? (
+              <div className="flex flex-col gap-4">
+                {filteredDoctors.map((doctor) => (
+                  <div
+                    key={doctor.id}
+                    className="bg-white rounded-xl border-2 border-gray-200 overflow-hidden flex flex-row"
+                  >
+                    <div className="w-44 flex-shrink-0 bg-gradient-to-b from-teal-100 to-gray-100 overflow-hidden">
+                      <img src={doctor.image} alt={doctor.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="p-6 flex flex-col flex-grow justify-center">
+                      <h2 className="em-subheading" style={{marginBottom: "4px"}}>{doctor.name}</h2>
+                      <p className="em-body font-semibold text-teal-700 mb-2">{doctor.specialty}</p>
+                      <p className="em-body text-gray-600">{doctor.bio}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-
-              {/* Card Content */}
-              <div className="p-6 flex flex-col flex-grow">
-                {/* Name and Specialty */}
-                <div className="mb-4">
-                  <h2 className="text-xl font-bold text-gray-900 mb-1">{doctor.name}</h2>
-                  <p className="text-base font-semibold text-teal-600">{doctor.specialty}</p>
-                </div>
-
-                {/* Bio */}
-                <p className="text-sm text-gray-700 flex-grow mb-6">{doctor.bio}</p>
-
-                {/* Action button */}
-                <button className="w-full bg-teal-600 text-white py-2 rounded-lg font-semibold hover:bg-teal-700 hover:scale-105 active:scale-95 transition-all duration-200">
-                  Schedule Appointment
-                </button>
+            ) : (
+              /* NORMAL MODE: Portrait grid */
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-8">
+                {filteredDoctors.map((doctor, index) => (
+                  <div
+                    key={doctor.id}
+                    className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 overflow-hidden flex flex-col animate-slide-in-up"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    {/* Doctor Photo — portrait top */}
+                    <div className="w-full aspect-[1/1] bg-gradient-to-b from-teal-100 to-gray-100 overflow-hidden flex-shrink-0">
+                      <img src={doctor.image} alt={doctor.name} className="w-full h-full object-cover" />
+                    </div>
+                    {/* Info — bottom */}
+                    <div className="p-4 flex flex-col flex-grow">
+                      <h2 className="text-base font-bold text-gray-900 mb-0.5">{doctor.name}</h2>
+                      <p className="text-sm font-semibold text-teal-600 mb-2">{doctor.specialty}</p>
+                      <p className="text-xs text-gray-600 flex-grow leading-relaxed">{doctor.bio}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
-            ))}
-            </div>
+            )}
           </>
         ) : (
           <div className="text-center py-16 bg-white rounded-xl shadow-md p-12 border border-gray-200 animate-scale-in">
             <p className="text-lg text-gray-600 mb-4">No doctors found matching your search criteria.</p>
             <button
-              onClick={() => {
-                setSearchQuery("");
-                setSelectedSpecialty("");
-                setSelectedLocation("");
-              }}
+              onClick={() => { setSearchQuery(""); setSelectedSpecialty(""); setSelectedLocation(""); }}
               className="px-6 py-2 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 hover:scale-105 active:scale-95 transition-all duration-200"
             >
               Clear Filters
