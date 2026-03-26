@@ -17,7 +17,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PharmacistSchedule extends BaseSchedule {
+public class DriverSchedule extends BaseSchedule {
 
     // ? @ManyToOne: One pharmacist (User) can have many schedule entries.
     // ! The User's role must be PHARMACIST — enforced at the service layer, not here.
