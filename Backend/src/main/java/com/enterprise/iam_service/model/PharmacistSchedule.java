@@ -3,8 +3,6 @@ package com.enterprise.iam_service.model;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.UUID;
-
 // ? @Entity: Defines this class as a JPA entity mapped to the 'pharmacist_schedules' table.
 // ? Extends BaseSchedule for shared scheduling logic (recurring + specific date override pattern).
 @Entity

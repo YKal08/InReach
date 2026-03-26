@@ -3,7 +3,7 @@ package com.enterprise.iam_service.model;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.UUID;
+
 
 @Entity
 @Table(
