@@ -1,0 +1,26 @@
+# -- Deploy Argo CD Applications within this helm release
+# @default -- `{}` (See [values.yaml])
+## Ref: https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/
+applications:
+  observability-prod-apps:
+    name: observability-prod-apps
+    namespace: argocd
+    project: default
+    source:
+      repoURL: git@gitlab.itgix.com:rnd/itgix-observability-projects/itgix-sre-platform/argocd.git
+      targetRevision: main
+      path: .
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: argocd
+    syncPolicy:
+      automated:
+        prune: true
+        selfHeal: true
+      syncOptions:
+        - CreateNamespace=true
+
+projects: {}
+applicationsets: {}
+itemTemplates: []
+extensions: {}

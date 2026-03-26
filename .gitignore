@@ -1,0 +1,48 @@
+# Local .terraform directories
+**/.terraform/*
+
+# Terraform lockfile (keep this if you want to commit it)
+# .terraform.lock.hcl
+
+# State files
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Sensitive variable files
+*.tfvars
+*.tfvars.json
+
+# Override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI configuration files
+.terraformrc
+terraform.rc
+
+# Plan files
+*.tfplan
+*.plan
+
+# Backend configuration
+backend.hcl
+
+# SSH keys
+*.pem
+*.key
+
+# macOS
+.DS_Store
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*.swo
