@@ -30,6 +30,18 @@ public class DataInitializer implements CommandLineRunner {
             adminRole.setName("ADMIN");
             roleRepository.save(adminRole);
 
+            Role patientRole = new Role();
+            patientRole.setName("PATIENT");
+            roleRepository.save(patientRole);
+
+            Role doctorRole = new Role();
+            doctorRole.setName("DOCTOR");
+            roleRepository.save(doctorRole);
+
+            Role driverRole = new Role();
+            driverRole.setName("DRIVER");
+            roleRepository.save(driverRole);
+
             // * Seed the initial system administrator if they don't exist.
             if (userRepository.findByEmail("admin@enterprise.com").isEmpty()) {
                 
