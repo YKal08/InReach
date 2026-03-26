@@ -22,44 +22,35 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // * Logic check: Prevent duplicate roles by verifying if "ADMIN" already exists in the DB.
-        if (roleRepository.findByName("ADMIN").isEmpty()) {
-            
-            // * Initialize the system's core Administrative Role.
-            Role adminRole = new Role();
-            adminRole.setName("ADMIN");
-            roleRepository.save(adminRole);
+        Role adminRole = ensureRole("ADMIN");
+        ensureRole("PATIENT");
+        ensureRole("DOCTOR");
+        ensureRole("DRIVER");
 
-            Role patientRole = new Role();
-            patientRole.setName("PATIENT");
-            roleRepository.save(patientRole);
+        if (userRepository.findByEmail("admin@enterprise.com").isEmpty()) {
+            User admin = User.builder()
+                    .egn("0000000000")
+                    .firstName("System")
+                    .lastName("Administrator")
+                    .address("Enterprise HQ")
+                    .telephone("+359000000000")
+                    .email("admin@enterprise.com")
+                    .passwordHash(passwordEncoder.encode("admin123"))
+                    .status("ACTIVE")
+                    .roles(Set.of(adminRole))
+                    .build();
 
-            Role doctorRole = new Role();
-            doctorRole.setName("DOCTOR");
-            roleRepository.save(doctorRole);
-
-            Role driverRole = new Role();
-            driverRole.setName("DRIVER");
-            roleRepository.save(driverRole);
-
-            // * Seed the initial system administrator if they don't exist.
-            if (userRepository.findByEmail("admin@enterprise.com").isEmpty()) {
-                
-                // ! SECURITY ALERT: Default credentials used for first-time setup. 
-                // ! Change password immediately after first login.
-                User admin = User.builder()
-                        .email("admin@enterprise.com")
-                        .passwordHash(passwordEncoder.encode("admin123")) // ! BCrypt hashing applied here
-                        .status("ACTIVE")
-                        .roles(Set.of(adminRole))
-                        .build();
-                
-                userRepository.save(admin);
-                
-                // * Audit: Log initial setup to the console.
-                System.out.println("Default Admin account created: admin@enterprise.com / admin123");
-            }
+            userRepository.save(admin);
+            System.out.println("Default Admin account created: admin@enterprise.com / admin123");
         }
-        
+    }
+
+    private Role ensureRole(String roleName) {
+        return roleRepository.findByName(roleName)
+                .orElseGet(() -> {
+                    Role role = new Role();
+                    role.setName(roleName);
+                    return roleRepository.save(role);
+                });
     }
 }

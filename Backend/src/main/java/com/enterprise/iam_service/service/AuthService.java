@@ -3,13 +3,16 @@ package com.enterprise.iam_service.service;
 import com.enterprise.iam_service.dto.AuthResponse;
 import com.enterprise.iam_service.dto.LoginRequest;
 import com.enterprise.iam_service.dto.RegisterRequest;
+import com.enterprise.iam_service.model.Role;
 import com.enterprise.iam_service.model.User;
+import com.enterprise.iam_service.repository.RoleRepository;
 import com.enterprise.iam_service.repository.UserRepository;
 import com.enterprise.iam_service.security.JwtUtils;
 
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,6 +24,7 @@ import org.springframework.stereotype.Service;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
     private final SecurityService securityService;
@@ -35,14 +39,23 @@ public class AuthService {
         // ! SECURITY: Enforces the organization's password complexity rules before proceeding.
         validatePasswordStrength(request.password());
 
+        Role patientRole = roleRepository.findByName("PATIENT")
+            .orElseThrow(() -> new RuntimeException("PATIENT role is not configured"));
+
         // * Step 2: Assemble the User object. 
         // ! SECURITY: The password is encrypted using BCrypt immediately via passwordEncoder.encode().
         var user = User.builder()
-                .email(request.email())
-                .passwordHash(passwordEncoder.encode(request.password()))
-                // ! CHANGED: New accounts are PENDING by default — admin must activate them. Change this based on needs.
-                .status("PENDING")
-                .build();
+            .egn(request.egn())
+            .firstName(request.firstName())
+            .lastName(request.lastName())
+            .address(request.address())
+            .telephone(request.telephone())
+            .email(request.email())
+            .passwordHash(passwordEncoder.encode(request.password()))
+            // ! CHANGED: New accounts are PENDING by default — admin must activate them. Change this based on needs.
+            .status("ACTIVE") //
+            .roles(Set.of(patientRole))
+            .build();
 
         // * Step 3: Persistence and Token Issuance.
         userRepository.save(user);
@@ -50,7 +63,8 @@ public class AuthService {
         // ! NOTE: We do NOT return a token on register anymore.
         // ! The account must be activated by an admin before the user can log in.
         // ! Returning an empty/null token — the frontend should NOT redirect on register.
-        return new AuthResponse(null);
+        String token = jwtUtils.generateToken(user.getEmail());
+        return new AuthResponse(token);
     }
 
     // * Business Logic: Handles credential verification and session initiation.
