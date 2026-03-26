@@ -93,7 +93,7 @@ export default function RequestDoctor() {
             <div className="flex gap-4">
               <button
                 type="submit"
-                className="flex-1 bg-teal-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-teal-700 hover:scale-105 active:scale-95 transition-all duration-200"
+                className="flex-1 bg-(--clr-primary) text-white px-6 py-3 rounded-lg font-semibold hover:bg-(--clr-primary-hover) hover:scale-105 active:scale-95 transition-all duration-200"
               >
                 Request Doctor
               </button>

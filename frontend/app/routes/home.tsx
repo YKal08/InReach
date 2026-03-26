@@ -119,7 +119,7 @@ export default function Home() {
                     </Suspense>
                     <div className="flex gap-3">
                       <button type="button" onClick={() => { setShowMap(false); setSelectedLocation(null); setFormData((p) => ({ ...p, address: "" })); }} className="flex-1 border-2 border-gray-300 text-gray-700 px-4 py-2.5 rounded-lg font-medium">Cancel</button>
-                      <button type="button" onClick={() => setShowMap(false)} className="flex-1 bg-gray-100 text-gray-700 px-4 py-2.5 rounded-lg font-medium">Done</button>
+                      <button type="button" onClick={() => setShowMap(false)} className="flex-1 bg-(--clr-primary) text-white px-4 py-2.5 rounded-lg font-medium hover:bg-(--clr-primary-hover) transition-colors duration-200">Done</button>
                     </div>
                   </div>
                 )}

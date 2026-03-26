@@ -129,7 +129,7 @@ export default function RequestDoctorModal({
                   <button
                     type="button"
                     onClick={() => setShowMap(true)}
-                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors duration-200 flex-shrink-0 m-1"
+                    className="p-2 text-(--clr-primary) hover:text-(--clr-primary-hover) hover:bg-(--clr-accent-light) rounded transition-colors duration-200 shrink-0 m-1"
                     title="Pinpoint location on map"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,7 +165,7 @@ export default function RequestDoctorModal({
                   <button
                     type="button"
                     onClick={() => setShowMap(false)}
-                    className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors duration-200"
+                    className="flex-1 bg-(--clr-primary) text-white px-4 py-2 rounded-lg font-medium hover:bg-(--clr-primary-hover) transition-colors duration-200"
                   >
                     Done
                   </button>
@@ -202,7 +202,7 @@ export default function RequestDoctorModal({
           <div className="flex gap-4 pt-4">
             <button
               type="submit"
-              className="flex-1 bg-[var(--clr-accent-dark)] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[var(--clr-accent-dark)] active:bg-[var(--clr-nav)] transition-colors duration-200"
+              className="flex-1 bg-(--clr-primary) text-white px-6 py-3 rounded-lg font-semibold hover:bg-(--clr-primary-hover) active:bg-(--clr-primary) transition-colors duration-200"
             >
               Submit Request
             </button>
