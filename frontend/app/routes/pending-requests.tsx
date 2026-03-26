@@ -16,7 +16,7 @@ export default function PendingRequests() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <Navbar />
 
       <div className="max-w-5xl mx-auto px-4 py-12">
@@ -32,7 +32,7 @@ export default function PendingRequests() {
         {/* Back Button */}
         <Link
           to="/home"
-          className="inline-block mb-8 text-teal-600 hover:text-teal-700 font-medium transition-colors"
+          className="inline-block mb-8 text-[var(--clr-accent)] hover:text-[var(--clr-accent-muted)] font-medium transition-colors"
         >
           ← Back to Home
         </Link>
@@ -43,7 +43,7 @@ export default function PendingRequests() {
             <p className="text-gray-600 mb-6">You have no pending requests at this time.</p>
             <Link
               to="/home"
-              className="inline-block bg-teal-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-teal-700 transition-colors"
+              className="inline-block bg-[var(--clr-accent-dark)] text-white px-6 py-3 rounded-lg font-medium hover:bg-[var(--clr-accent-dark)] transition-colors"
             >
               Make a New Request
             </Link>
@@ -84,7 +84,7 @@ export default function PendingRequests() {
                   </div>
                 </div>
 
-                <button className="text-teal-600 hover:text-teal-700 font-medium transition-colors">
+                <button className="text-[var(--clr-accent)] hover:text-[var(--clr-accent-muted)] font-medium transition-colors">
                   View Details →
                 </button>
               </div>

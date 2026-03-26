@@ -103,7 +103,7 @@ export default function Home() {
                     <button
                       type="button"
                       onClick={() => setShowMap(true)}
-                      className="p-3 text-gray-500 hover:text-teal-600 hover:bg-gray-50 border-l border-gray-300"
+                      className="p-3 text-gray-500 hover:text-[var(--clr-accent)] hover:bg-gray-50 border-l border-gray-300"
                       title="Pick on map"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -178,7 +178,7 @@ export default function Home() {
 
   // ── Normal Mode ──────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <Navbar />
 
       <div className="max-w-5xl mx-auto px-4 py-12">
@@ -194,7 +194,7 @@ export default function Home() {
             </p>
             <button
               onClick={() => setIsRequestModalOpen(true)}
-              className="block w-full bg-teal-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-teal-700 active:bg-teal-800 transition-colors duration-200 text-center"
+              className="block w-full bg-[var(--clr-primary)] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[var(--clr-primary-hover)] active:bg-[var(--clr-primary)] transition-colors duration-200 text-center"
             >
               Make a Request
             </button>

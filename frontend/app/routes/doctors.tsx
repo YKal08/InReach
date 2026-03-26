@@ -120,7 +120,7 @@ export default function Doctors() {
   }, [searchQuery, selectedSpecialty, selectedLocation]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <Navbar />
 
       <div className={isEasyMode ? "em-page" : "max-w-7xl mx-auto px-4 py-4"}>
@@ -175,7 +175,7 @@ export default function Doctors() {
                   <select
                     value={selectedSpecialty}
                     onChange={(e) => setSelectedSpecialty(e.target.value)}
-                    className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white text-xs"
+                    className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[var(--clr-accent)] bg-white text-xs"
                   >
                     <option value="">All Specialties</option>
                     {specialties.map((specialty) => (
@@ -189,7 +189,7 @@ export default function Doctors() {
                   <select
                     value={selectedLocation}
                     onChange={(e) => setSelectedLocation(e.target.value)}
-                    className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white text-xs"
+                    className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[var(--clr-accent)] bg-white text-xs"
                   >
                     <option value="">All Locations</option>
                     {locations.map((location) => (
@@ -201,7 +201,7 @@ export default function Doctors() {
                 <div className={`text-center pt-2 border-t border-gray-200 ${isEasyMode ? "col-span-2" : ""}`}>
                   <button
                     onClick={() => { setSelectedSpecialty(""); setSelectedLocation(""); }}
-                    className="text-xs text-teal-600 hover:text-teal-700 font-semibold hover:scale-105 transition-all duration-200"
+                    className="text-xs text-[var(--clr-accent)] hover:text-[var(--clr-accent-muted)] font-semibold hover:scale-105 transition-all duration-200"
                   >
                     Clear Filters
                   </button>
@@ -226,12 +226,12 @@ export default function Doctors() {
                     key={doctor.id}
                     className="bg-white rounded-xl border-2 border-gray-200 overflow-hidden flex flex-row"
                   >
-                    <div className="w-44 flex-shrink-0 bg-gradient-to-b from-teal-100 to-gray-100 overflow-hidden">
+                    <div className="w-44 flex-shrink-0 bg-gradient-to-b from-[var(--clr-nav)] to-[var(--clr-nav-light)] overflow-hidden">
                       <img src={doctor.image} alt={doctor.name} className="w-full h-full object-cover" />
                     </div>
                     <div className="p-6 flex flex-col flex-grow justify-center">
                       <h2 className="em-subheading" style={{marginBottom: "4px"}}>{doctor.name}</h2>
-                      <p className="em-body font-semibold text-teal-700 mb-2">{doctor.specialty}</p>
+                      <p className="em-body font-semibold text-[var(--clr-accent-muted)] mb-2">{doctor.specialty}</p>
                       <p className="em-body text-gray-600">{doctor.bio}</p>
                     </div>
                   </div>
@@ -247,13 +247,13 @@ export default function Doctors() {
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
                     {/* Doctor Photo — portrait top */}
-                    <div className="w-full aspect-[1/1] bg-gradient-to-b from-teal-100 to-gray-100 overflow-hidden flex-shrink-0">
+                    <div className="w-full aspect-[1/1] bg-gradient-to-b from-[var(--clr-nav)] to-[var(--clr-nav-light)] overflow-hidden flex-shrink-0">
                       <img src={doctor.image} alt={doctor.name} className="w-full h-full object-cover" />
                     </div>
                     {/* Info — bottom */}
                     <div className="p-4 flex flex-col flex-grow">
                       <h2 className="text-base font-bold text-gray-900 mb-0.5">{doctor.name}</h2>
-                      <p className="text-sm font-semibold text-teal-600 mb-2">{doctor.specialty}</p>
+                      <p className="text-sm font-semibold text-[var(--clr-accent)] mb-2">{doctor.specialty}</p>
                       <p className="text-xs text-gray-600 flex-grow leading-relaxed">{doctor.bio}</p>
                     </div>
                   </div>
@@ -266,7 +266,7 @@ export default function Doctors() {
             <p className="text-lg text-gray-600 mb-4">No doctors found matching your search criteria.</p>
             <button
               onClick={() => { setSearchQuery(""); setSelectedSpecialty(""); setSelectedLocation(""); }}
-              className="px-6 py-2 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 hover:scale-105 active:scale-95 transition-all duration-200"
+              className="px-6 py-2 bg-[var(--clr-accent-dark)] text-white rounded-lg font-semibold hover:bg-[var(--clr-accent-dark)] hover:scale-105 active:scale-95 transition-all duration-200"
             >
               Clear Filters
             </button>
