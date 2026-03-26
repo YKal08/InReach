@@ -19,7 +19,7 @@ export default function Landing() {
           <div className="flex flex-col sm:flex-row gap-4 animate-slide-in-up [animation-delay:200ms]">
             <Link
               to="/register"
-              className="bg-[var(--clr-accent-dark)] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[var(--clr-accent-muted)] active:bg-[var(--clr-accent-dark)] transition-all duration-200 text-center"
+              className="bg-(--clr-primary) text-white px-8 py-3 rounded-lg font-semibold hover:bg-(--clr-primary-hover) active:bg-(--clr-primary) transition-all duration-200 text-center"
             >
               Get Started
             </Link>

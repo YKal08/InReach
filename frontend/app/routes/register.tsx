@@ -109,7 +109,7 @@ export default function Register() {
                   <input type="checkbox" name="acceptTerms" checked={formData.acceptTerms} onChange={handleChange} className="w-5 h-5 rounded border-gray-300" required />
                   <span className="em-body">
                     I agree to the{" "}
-                    <button type="button" onClick={() => setIsTermsModalOpen(true)} className="text-[var(--clr-accent-muted)] font-bold underline">terms and conditions</button>
+                    <button type="button" onClick={() => setIsTermsModalOpen(true)} className="text-(--clr-primary) hover:text-(--clr-primary-hover) font-bold underline">terms and conditions</button>
                   </span>
                 </label>
               </div>
@@ -121,7 +121,7 @@ export default function Register() {
 
             <p className="em-body mt-6">
               Already have an account?{" "}
-              <Link to="/login" className="text-[var(--clr-accent-muted)] font-bold underline">Sign in here</Link>
+              <Link to="/login" className="text-(--clr-primary) hover:text-(--clr-primary-hover) font-bold underline">Sign in here</Link>
             </p>
           </section>
         </div>
@@ -147,68 +147,68 @@ export default function Register() {
               <div className="grid grid-cols-2 gap-4 animate-slide-in-up [animation-delay:100ms]">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                  <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} placeholder="John" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--clr-accent)]" required />
+                  <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} placeholder="John" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-(--clr-accent)" required />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                  <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Doe" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--clr-accent)]" required />
+                  <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Doe" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-(--clr-accent)" required />
                 </div>
               </div>
 
               <div className="animate-slide-in-up [animation-delay:200ms]">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="you@example.com" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--clr-accent)]" required />
+                <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="you@example.com" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-(--clr-accent)" required />
               </div>
 
               <div className="animate-slide-in-up [animation-delay:300ms]">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
                 <div className="flex gap-2">
-                  <select name="countryCode" value={formData.countryCode} onChange={handleChange} className="px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--clr-accent)] bg-white text-sm" required>
+                  <select name="countryCode" value={formData.countryCode} onChange={handleChange} className="px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-(--clr-accent) bg-white text-sm" required>
                     {countries.map((c) => <option key={c.code} value={c.code}>{c.iso} {c.code}</option>)}
                   </select>
-                  <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="(555) 000-0000" className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--clr-accent)]" required />
+                  <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="(555) 000-0000" className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-(--clr-accent)" required />
                 </div>
               </div>
 
               <div className="animate-slide-in-up [animation-delay:400ms]">
                 <label className="block text-sm font-medium text-gray-700 mb-1">EGN (Bulgarian ID Number)</label>
-                <input type="text" name="egn" value={formData.egn} onChange={handleChange} placeholder="1234567890" maxLength={10} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--clr-accent)]" required />
+                <input type="text" name="egn" value={formData.egn} onChange={handleChange} placeholder="1234567890" maxLength={10} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-(--clr-accent)" required />
                 <p className="text-xs text-gray-500 mt-1">10-digit Bulgarian national ID number</p>
               </div>
 
               <div className="animate-slide-in-up [animation-delay:500ms]">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Address / Location</label>
-                <input type="text" name="addressLocation" value={formData.addressLocation} onChange={handleChange} placeholder="City, District" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--clr-accent)]" required />
+                <input type="text" name="addressLocation" value={formData.addressLocation} onChange={handleChange} placeholder="City, District" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-(--clr-accent)" required />
               </div>
 
               <div className="animate-slide-in-up [animation-delay:600ms]">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="••••••••" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--clr-accent)]" required />
+                <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="••••••••" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-(--clr-accent)" required />
               </div>
 
               <div className="animate-slide-in-up [animation-delay:700ms]">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-                <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="••••••••" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--clr-accent)]" required />
+                <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="••••••••" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-(--clr-accent)" required />
               </div>
 
               <label className="flex items-start animate-slide-in-up [animation-delay:800ms]">
                 <input type="checkbox" name="acceptTerms" checked={formData.acceptTerms} onChange={handleChange} className="w-4 h-4 rounded border-gray-300 mt-0.5" required />
                 <span className="ml-2 text-sm text-gray-700">
                   I agree to the{" "}
-                  <button type="button" onClick={() => setIsTermsModalOpen(true)} className="text-[var(--clr-accent)] hover:text-[var(--clr-accent-muted)] font-semibold cursor-pointer underline transition-all duration-200">
+                  <button type="button" onClick={() => setIsTermsModalOpen(true)} className="text-(--clr-primary) hover:text-(--clr-primary-hover) font-semibold cursor-pointer underline transition-all duration-200">
                     terms and conditions
                   </button>
                 </span>
               </label>
 
-              <button type="submit" className="w-full bg-[var(--clr-accent-dark)] text-white py-2 rounded-lg font-bold hover:bg-[var(--clr-accent-dark)] hover:scale-105 active:scale-95 transition-all duration-200 mt-2 animate-slide-in-up [animation-delay:900ms]">
+              <button type="submit" className="w-full bg-(--clr-primary) text-white py-2 rounded-lg font-bold hover:bg-(--clr-primary-hover) hover:scale-105 active:scale-95 transition-all duration-200 mt-2 animate-slide-in-up [animation-delay:900ms]">
                 Create Account
               </button>
             </form>
 
             <p className="text-center text-gray-600 mt-6 animate-fade-in [animation-delay:1000ms]">
               Already have an account?{" "}
-              <Link to="/login" className="text-[var(--clr-accent)] hover:text-[var(--clr-accent-muted)] font-bold hover:underline transition-all duration-200">Sign in here</Link>
+              <Link to="/login" className="text-(--clr-primary) hover:text-(--clr-primary-hover) font-bold hover:underline transition-all duration-200">Sign in here</Link>
             </p>
           </div>
         </div>

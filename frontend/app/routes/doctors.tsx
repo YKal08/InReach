@@ -41,7 +41,7 @@ export default function Doctors() {
       email: "maria.ivanova@inreach.bg",
       bio: "Experienced general practitioner with a passion for preventive care and patient education.",
       availability: "Mon-Fri, 9AM-5PM",
-      image: "https://ui-avatars.com/api/?name=Maria+Ivanova&background=14b8a6&color=fff&bold=true&size=200",
+      image: "https://ui-avatars.com/api/?name=Maria+Ivanova&background=4a4699&color=fff&bold=true&size=200",
     },
     {
       id: 2,
@@ -53,7 +53,7 @@ export default function Doctors() {
       email: "alex.petrov@inreach.bg",
       bio: "Specializing in cardiovascular diseases with advanced diagnostic expertise.",
       availability: "Tue-Sat, 10AM-6PM",
-      image: "https://ui-avatars.com/api/?name=Alexander+Petrov&background=14b8a6&color=fff&bold=true&size=200",
+      image: "https://ui-avatars.com/api/?name=Alexander+Petrov&background=4a4699&color=fff&bold=true&size=200",
     },
     {
       id: 3,
@@ -65,7 +65,7 @@ export default function Doctors() {
       email: "elena.georgieva@inreach.bg",
       bio: "Child health specialist dedicated to providing compassionate pediatric care.",
       availability: "Mon-Thu, 8AM-4PM",
-      image: "https://ui-avatars.com/api/?name=Elena+Georgieva&background=14b8a6&color=fff&bold=true&size=200",
+      image: "https://ui-avatars.com/api/?name=Elena+Georgieva&background=4a4699&color=fff&bold=true&size=200",
     },
     {
       id: 4,
@@ -77,7 +77,7 @@ export default function Doctors() {
       email: "ivan.dimitrov@inreach.bg",
       bio: "Expert in bone and joint conditions with surgical and non-surgical treatment options.",
       availability: "Wed-Sun, 11AM-7PM",
-      image: "https://ui-avatars.com/api/?name=Ivan+Dimitrov&background=14b8a6&color=fff&bold=true&size=200",
+      image: "https://ui-avatars.com/api/?name=Ivan+Dimitrov&background=4a4699&color=fff&bold=true&size=200",
     },
     {
       id: 5,
@@ -89,7 +89,7 @@ export default function Doctors() {
       email: "sofia.nikolova@inreach.bg",
       bio: "Skin health specialist providing diagnostic and therapeutic dermatological services.",
       availability: "Tue-Sat, 9AM-5PM",
-      image: "https://ui-avatars.com/api/?name=Sofia+Nikolova&background=14b8a6&color=fff&bold=true&size=200",
+      image: "https://ui-avatars.com/api/?name=Sofia+Nikolova&background=4a4699&color=fff&bold=true&size=200",
     },
     {
       id: 6,
@@ -101,7 +101,7 @@ export default function Doctors() {
       email: "yorgos.papadopoulos@inreach.bg",
       bio: "Neurological disorders specialist with comprehensive diagnostic and treatment expertise.",
       availability: "Mon, Wed, Fri, 9AM-3PM",
-      image: "https://ui-avatars.com/api/?name=Yorgos+Papadopoulos&background=14b8a6&color=fff&bold=true&size=200",
+      image: "https://ui-avatars.com/api/?name=Yorgos+Papadopoulos&background=4a4699&color=fff&bold=true&size=200",
     },
   ];
 
@@ -135,7 +135,7 @@ export default function Doctors() {
         <div className="mb-4 relative animate-slide-in-up [animation-delay:200ms]">
           <div className="bg-white rounded border border-gray-300 shadow-sm hover:shadow-md transition-all duration-200">
             <div className="flex items-center gap-2 px-3 py-2">
-              <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <input
@@ -175,7 +175,7 @@ export default function Doctors() {
                   <select
                     value={selectedSpecialty}
                     onChange={(e) => setSelectedSpecialty(e.target.value)}
-                    className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[var(--clr-accent)] bg-white text-xs"
+                    className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-(--clr-accent) bg-white text-xs"
                   >
                     <option value="">All Specialties</option>
                     {specialties.map((specialty) => (
@@ -189,7 +189,7 @@ export default function Doctors() {
                   <select
                     value={selectedLocation}
                     onChange={(e) => setSelectedLocation(e.target.value)}
-                    className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[var(--clr-accent)] bg-white text-xs"
+                    className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-(--clr-accent) bg-white text-xs"
                   >
                     <option value="">All Locations</option>
                     {locations.map((location) => (
@@ -201,7 +201,7 @@ export default function Doctors() {
                 <div className={`text-center pt-2 border-t border-gray-200 ${isEasyMode ? "col-span-2" : ""}`}>
                   <button
                     onClick={() => { setSelectedSpecialty(""); setSelectedLocation(""); }}
-                    className="text-xs text-[var(--clr-accent)] hover:text-[var(--clr-accent-muted)] font-semibold hover:scale-105 transition-all duration-200"
+                    className="text-xs text-(--clr-accent) hover:text-(--clr-accent-muted) font-semibold hover:scale-105 transition-all duration-200"
                   >
                     Clear Filters
                   </button>
@@ -224,14 +224,14 @@ export default function Doctors() {
                 {filteredDoctors.map((doctor) => (
                   <div
                     key={doctor.id}
-                    className="bg-white rounded-xl border-2 border-gray-200 overflow-hidden flex flex-row"
+                    className="bg-white rounded-xl border-2 border-(--clr-accent-light) overflow-hidden flex flex-row"
                   >
-                    <div className="w-44 flex-shrink-0 bg-gradient-to-b from-[var(--clr-nav)] to-[var(--clr-nav-light)] overflow-hidden">
+                    <div className="w-44 shrink-0 bg-linear-to-b from-(--clr-primary) to-(--clr-primary-hover) overflow-hidden">
                       <img src={doctor.image} alt={doctor.name} className="w-full h-full object-cover" />
                     </div>
-                    <div className="p-6 flex flex-col flex-grow justify-center">
+                    <div className="p-6 flex flex-col grow justify-center">
                       <h2 className="em-subheading" style={{marginBottom: "4px"}}>{doctor.name}</h2>
-                      <p className="em-body font-semibold text-[var(--clr-accent-muted)] mb-2">{doctor.specialty}</p>
+                      <p className="inline-flex self-start px-3 py-1 rounded-full text-sm font-semibold bg-(--clr-accent-light) text-(--clr-primary-hover) mb-2">{doctor.specialty}</p>
                       <p className="em-body text-gray-600">{doctor.bio}</p>
                     </div>
                   </div>
@@ -243,18 +243,18 @@ export default function Doctors() {
                 {filteredDoctors.map((doctor, index) => (
                   <div
                     key={doctor.id}
-                    className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 overflow-hidden flex flex-col animate-slide-in-up"
+                    className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-(--clr-accent-light) overflow-hidden flex flex-col animate-slide-in-up"
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
                     {/* Doctor Photo — portrait top */}
-                    <div className="w-full aspect-[1/1] bg-gradient-to-b from-[var(--clr-nav)] to-[var(--clr-nav-light)] overflow-hidden flex-shrink-0">
+                    <div className="w-full aspect-square bg-linear-to-b from-(--clr-primary) to-(--clr-primary-hover) overflow-hidden shrink-0">
                       <img src={doctor.image} alt={doctor.name} className="w-full h-full object-cover" />
                     </div>
                     {/* Info — bottom */}
-                    <div className="p-4 flex flex-col flex-grow">
+                    <div className="p-4 flex flex-col grow">
                       <h2 className="text-base font-bold text-gray-900 mb-0.5">{doctor.name}</h2>
-                      <p className="text-sm font-semibold text-[var(--clr-accent)] mb-2">{doctor.specialty}</p>
-                      <p className="text-xs text-gray-600 flex-grow leading-relaxed">{doctor.bio}</p>
+                      <p className="inline-flex self-start px-2.5 py-1 rounded-full text-xs font-semibold bg-(--clr-accent-light) text-(--clr-primary-hover) mb-2">{doctor.specialty}</p>
+                      <p className="text-xs text-gray-600 grow leading-relaxed">{doctor.bio}</p>
                     </div>
                   </div>
                 ))}
@@ -266,7 +266,7 @@ export default function Doctors() {
             <p className="text-lg text-gray-600 mb-4">No doctors found matching your search criteria.</p>
             <button
               onClick={() => { setSearchQuery(""); setSelectedSpecialty(""); setSelectedLocation(""); }}
-              className="px-6 py-2 bg-[var(--clr-accent-dark)] text-white rounded-lg font-semibold hover:bg-[var(--clr-accent-dark)] hover:scale-105 active:scale-95 transition-all duration-200"
+              className="px-6 py-2 bg-(--clr-accent-dark) text-white rounded-lg font-semibold hover:bg-(--clr-accent-dark) hover:scale-105 active:scale-95 transition-all duration-200"
             >
               Clear Filters
             </button>

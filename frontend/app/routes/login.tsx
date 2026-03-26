@@ -60,7 +60,7 @@ export default function Login() {
             </form>
             <p className="em-body mt-6">
               Don't have an account?{" "}
-              <Link to="/register" className="text-[var(--clr-accent-muted)] font-bold underline">Register here</Link>
+              <Link to="/register" className="text-(--clr-primary) hover:text-(--clr-primary-hover) font-bold underline">Register here</Link>
             </p>
           </section>
         </div>
@@ -87,7 +87,7 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--clr-accent)] transition-all duration-200"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-(--clr-accent) transition-all duration-200"
                   required
                 />
               </div>
@@ -99,14 +99,14 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--clr-accent)] transition-all duration-200"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-(--clr-accent) transition-all duration-200"
                   required
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full bg-[var(--clr-accent-dark)] text-white py-2 rounded-lg font-bold hover:bg-[var(--clr-accent-dark)] hover:scale-105 active:scale-95 transition-all duration-200 mt-6 animate-slide-in-up [animation-delay:300ms]"
+                className="w-full bg-(--clr-primary) text-white py-2 rounded-lg font-bold hover:bg-(--clr-primary-hover) hover:scale-105 active:scale-95 transition-all duration-200 mt-6 animate-slide-in-up [animation-delay:300ms]"
               >
                 Sign In
               </button>
@@ -114,7 +114,7 @@ export default function Login() {
 
             <p className="text-center text-gray-600 mt-6 animate-fade-in [animation-delay:400ms]">
               Don't have an account?{" "}
-              <Link to="/register" className="text-[var(--clr-accent)] hover:text-[var(--clr-accent-muted)] font-bold hover:underline transition-all duration-200">
+              <Link to="/register" className="text-(--clr-primary) hover:text-(--clr-primary-hover) font-bold hover:underline transition-all duration-200">
                 Register here
               </Link>
             </p>
