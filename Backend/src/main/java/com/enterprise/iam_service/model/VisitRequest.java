@@ -17,7 +17,7 @@ import jakarta.validation.constraints.Min;
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @Builder
-public class Request {
+public class VisitRequest {
 
     // * Primary Key: UUID aligns with the User model for consistency and distributed-system safety.
     @Id
