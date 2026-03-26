@@ -18,16 +18,41 @@ export default function Register() {
     email: "",
     password: "",
     confirmPassword: "",
+    countryCode: "+359",
     phone: "",
     egn: "",
     addressLocation: "",
     acceptTerms: false,
   });
 
+  const countries = [
+    { code: "+1", iso: "US", flag: "🇺🇸" },
+    { code: "+44", iso: "GB", flag: "🇬🇧" },
+    { code: "+359", iso: "BG", flag: "🇧🇬" },
+    { code: "+33", iso: "FR", flag: "🇫🇷" },
+    { code: "+49", iso: "DE", flag: "🇩🇪" },
+    { code: "+39", iso: "IT", flag: "🇮🇹" },
+    { code: "+34", iso: "ES", flag: "🇪🇸" },
+    { code: "+31", iso: "NL", flag: "🇳🇱" },
+    { code: "+43", iso: "AT", flag: "🇦🇹" },
+    { code: "+41", iso: "CH", flag: "🇨🇭" },
+    { code: "+46", iso: "SE", flag: "🇸🇪" },
+    { code: "+47", iso: "NO", flag: "🇳🇴" },
+    { code: "+45", iso: "DK", flag: "🇩🇰" },
+    { code: "+358", iso: "FI", flag: "🇫🇮" },
+    { code: "+30", iso: "GR", flag: "🇬🇷" },
+    { code: "+48", iso: "PL", flag: "🇵🇱" },
+    { code: "+420", iso: "CZ", flag: "🇨🇿" },
+    { code: "+36", iso: "HU", flag: "🇭🇺" },
+    { code: "+40", iso: "RO", flag: "🇷🇴" },
+    { code: "+90", iso: "TR", flag: "🇹🇷" },
+  ];
+
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    const checked = type === "checkbox" ? (e.target as HTMLInputElement).checked : undefined;
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
@@ -105,15 +130,30 @@ export default function Register() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Phone Number
               </label>
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="+1 (555) 000-0000"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                required
-              />
+              <div className="flex gap-2">
+                <select
+                  name="countryCode"
+                  value={formData.countryCode}
+                  onChange={handleChange}
+                  className="px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white text-sm"
+                  required
+                >
+                  {countries.map((country) => (
+                    <option key={country.code} value={country.code}>
+                      {country.iso} {country.code}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="(555) 000-0000"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  required
+                />
+              </div>
             </div>
 
             <div>
