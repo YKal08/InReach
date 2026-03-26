@@ -6,12 +6,12 @@ on:
       - main
 
 env:
-  AWS_REGION: us-east-1              
-  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
-  BACKEND_REPO: my-app/backend   
-  FRONTEND_REPO: my-app/frontend 
-  BACKEND_DOCKERFILE_PATH: ./backend   
-  FRONTEND_DOCKERFILE_PATH: ./frontend  
+  AWS_REGION: eu-central-1
+  ECR_REGISTRY: 787587782604.dkr.ecr.eu-central-1.amazonaws.com
+  BACKEND_REPO: hacktues12-backend
+  FRONTEND_REPO: hacktues12-frontend
+  BACKEND_DOCKERFILE_PATH: ./backend
+  FRONTEND_DOCKERFILE_PATH: ./frontend
 
 jobs:
   detect-changes:
