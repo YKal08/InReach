@@ -1,29 +1,19 @@
-# Build
-FROM eclipse-temurin:21-jdk-alpine AS builder
+#Build stage
+FROM maven:3.9-eclipse-temurin-23 AS build
 WORKDIR /app
+#Copy only the definition of libraries
 COPY pom.xml .
-COPY .mvn/ .mvn/
-COPY mvnw .
+# Load libraries (cached)
+RUN mvn dependency:go-offline
+COPY src ./src
+#Create one executable
+RUN mvn clean package -DskipTests
 
-RUN chmod +x mvnw
-RUN ./mvnw dependency:go-offline -B
-
-COPY src/ src/
-RUN ./mvnw package -DskipTests -B
-
-#Runtime
-FROM eclipse-temurin:21-jre-alpine AS runtime
-
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-USER appuser
-
+# Run stage
+FROM eclipse-temurin:23-jre-alpine
 WORKDIR /app
-COPY --from=builder /app/target/*.jar app.jar
+# Вземаме само готовия .jar файл от първия етап
+COPY --from=build /app/target/*.jar app.jar
 
-ENV JAVA_OPTS="-XX:+UseContainerSupport \
-               -XX:MaxRAMPercentage=75.0 \
-               -XX:+ExitOnOutOfMemoryError \
-               -Djava.security.egd=file:/dev/./urandom"
-
-EXPOSE 8080  
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+EXPOSE 8080
+CMD ["java", "-jar", "app.jar"]
