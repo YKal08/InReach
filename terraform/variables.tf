@@ -62,3 +62,8 @@ variable "eks_node_instance_types" {
   description = "Instance types for EKS node group"
   type        = list(string)
 }
+
+variable "argocd_hostname" {
+  description = "Hostname for ArgoCD ingress"
+  type        = string
+}

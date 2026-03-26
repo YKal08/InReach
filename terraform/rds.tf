@@ -26,8 +26,19 @@ module "rds" {
   skip_final_snapshot     = true
   deletion_protection     = false
 
-  create_db_subnet_group = true
-  subnet_ids             = module.vpc.private_subnets
+  publicly_accessible    = true
+  create_db_subnet_group = false
+  db_subnet_group_name   = aws_db_subnet_group.rds_public.name
+
+  tags = {
+    Environment = var.environment
+    Project     = var.project_name
+  }
+}
+
+resource "aws_db_subnet_group" "rds_public" {
+  name       = "${var.project_name}-${var.environment}-public"
+  subnet_ids = module.vpc.public_subnets
 
   tags = {
     Environment = var.environment
@@ -50,6 +61,13 @@ module "rds_sg" {
       protocol    = "tcp"
       cidr_blocks = var.vpc_cidr
       description = "PostgreSQL access from VPC"
+    },
+    {
+      from_port   = 5432
+      to_port     = 5432
+      protocol    = "tcp"
+      cidr_blocks = "0.0.0.0/0"
+      description = "PostgreSQL public access"
     }
   ]
 
