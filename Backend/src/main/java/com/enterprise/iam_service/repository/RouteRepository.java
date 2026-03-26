@@ -16,5 +16,5 @@ public interface RouteRepository extends JpaRepository<Route, UUID> {
     Optional<Route> findByDoctorAndDate(User doctor, LocalDate date);
  
     // * Used by the WebSocket location controller to find today's active route.
-    Optional<Route> findByDoctorIdAndDate(UUID doctorId, LocalDate date);
+    Optional<Route> findByDoctorEgnAndDate(String doctorEgn, LocalDate date);
 }
