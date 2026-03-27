@@ -1,0 +1,18 @@
+services:
+  backend:
+    build: ./backend
+    container_name: inreach-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=production
+
+  frontend:
+    build: ./frontend
+    container_name: inreach-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      - API_URL=http://backend:8080
