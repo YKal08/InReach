@@ -129,6 +129,8 @@ jobs:
           context: ${{ env.FRONTEND_DOCKERFILE_PATH }}
           file: ${{ env.FRONTEND_DOCKERFILE_PATH }}/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
+          build-args: |
+            GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
           tags: |
             ${{ env.ECR_REGISTRY }}/${{ env.FRONTEND_REPO }}:latest
             ${{ env.ECR_REGISTRY }}/${{ env.FRONTEND_REPO }}:${{ steps.tags.outputs.sha_tag }}
