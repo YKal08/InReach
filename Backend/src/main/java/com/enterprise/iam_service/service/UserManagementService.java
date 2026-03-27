@@ -1,12 +1,12 @@
 package com.enterprise.iam_service.service;
 
+import com.enterprise.iam_service.dto.UserProfileUpdateRequest;
 import com.enterprise.iam_service.model.User;
 import com.enterprise.iam_service.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.enterprise.iam_service.dto.UserProfileResponse;
-import java.util.Set;
 
 // ? @Service: Defines this class as a service layer component responsible for user-specific business operations.
 // ? @RequiredArgsConstructor: Injects final dependencies (UserRepository, PasswordEncoder, AuthService) via the constructor.
@@ -14,9 +14,16 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class UserManagementService {
 
+    private static final String DOCTOR_ROLE = "DOCTOR";
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthService authService;
+
+    private boolean isDoctor(User user) {
+        return user.getRoles().stream()
+                .anyMatch(role -> DOCTOR_ROLE.equalsIgnoreCase(role.getName()));
+    }
 
     // * Business Logic: Handles the secure rotation of user credentials.
     public void changePasswordByEmail(String email, String oldPassword, String newPassword) {
@@ -45,18 +52,63 @@ public class UserManagementService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // * Step 2: Transform Role entities into a simple Set of Strings.
-        // ? This simplifies the JSON response for the frontend and hides internal DB IDs.
-        Set<String> roles = user.getRoles().stream()
-                .map(role -> role.getName())
-                .collect(java.util.stream.Collectors.toSet());
+        boolean doctor = isDoctor(user);
 
         // * Step 3: Return a clean Profile DTO (excludes sensitive fields like passwordHash).
         return new UserProfileResponse(
+            user.getEgn(),
+            user.getFirstName(),
+            user.getLastName(),
+            user.getAddress(),
+            user.getTelephone(),
             user.getEmail(),
-            user.getStatus(),
-            roles,
-            user.getCreatedAt()
+            doctor ? user.getDescription() : null,
+            doctor
         );
+    }
+
+    public void updateProfileByEmail(String email, UserProfileUpdateRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (request.firstName() != null) {
+            user.setFirstName(request.firstName());
+        }
+        if (request.lastName() != null) {
+            user.setLastName(request.lastName());
+        }
+        if (request.address() != null) {
+            user.setAddress(request.address());
+        }
+        if (request.telephone() != null) {
+            user.setTelephone(request.telephone());
+        }
+        if (request.email() != null && !request.email().equalsIgnoreCase(user.getEmail())) {
+            if (userRepository.existsByEmail(request.email())) {
+                throw new RuntimeException("Email already in use");
+            }
+            user.setEmail(request.email());
+        }
+
+        if (request.description() != null) {
+            if (!isDoctor(user)) {
+                throw new RuntimeException("Only users with Doctor role can update description");
+            }
+            user.setDescription(request.description());
+        }
+
+        userRepository.save(user);
+    }
+
+    public void updateDoctorDescriptionByEmail(String email, String description) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!isDoctor(user)) {
+            throw new RuntimeException("Only users with Doctor role can update description");
+        }
+
+        user.setDescription(description);
+        userRepository.save(user);
     }
 }

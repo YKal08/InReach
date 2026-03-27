@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 public class AdminDashboardService {
 
     private static final String ADMIN_ROLE_NAME = "ADMIN";
+    private static final String DOCTOR_ROLE_NAME = "DOCTOR";
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -99,6 +100,9 @@ public class AdminDashboardService {
         }
 
         user.setRoles(new HashSet<>(List.of(role)));
+        if (!isDoctorRole(role.getName())) {
+            user.setDescription(null);
+        }
         userRepository.save(user);
 
         return new UserRoleUpdateResponse(
@@ -170,6 +174,10 @@ public class AdminDashboardService {
             throw new RuntimeException("User does not have this role");
         }
 
+        if (isDoctorRole(role.getName())) {
+            user.setDescription(null);
+        }
+
         userRepository.save(user);
 
         return new UserRoleUpdateResponse(
@@ -220,5 +228,9 @@ public class AdminDashboardService {
     // * Utility: Case-insensitive check for Admin role names to prevent privilege escalation.
     private boolean isAdminRole(String roleName) {
         return ADMIN_ROLE_NAME.equals(roleName.trim().toUpperCase(Locale.ROOT));
+    }
+
+    private boolean isDoctorRole(String roleName) {
+        return DOCTOR_ROLE_NAME.equals(roleName.trim().toUpperCase(Locale.ROOT));
     }
 }
