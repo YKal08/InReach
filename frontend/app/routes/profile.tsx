@@ -30,18 +30,62 @@ export default function Profile() {
     address: registrationLocation?.address ?? "",
   });
 
+  const [passwordData, setPasswordData] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
   const [showMap, setShowMap] = useState(false);
   const [pickedLocation, setPickedLocation] = useState<{ lat: number; lng: number; address: string } | null>(
     registrationLocation ?? null
   );
   const [locating, setLocating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPasswordData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError("");
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError("New passwords do not match.");
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      setPasswordError("Password must be at least 6 characters long.");
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      await api.post("/users/change-password", {
+        oldPassword: passwordData.oldPassword,
+        newPassword: passwordData.newPassword,
+      });
+      setPasswordData({ oldPassword: "", newPassword: "", confirmPassword: "" });
+      setPasswordSuccess(true);
+      setTimeout(() => setPasswordSuccess(false), 3000);
+    } catch (err: any) {
+      setPasswordError(err.message || "Failed to change password. Please check your current password and try again.");
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   const handleLocationSelect = (lat: number, lng: number, address: string) => {
@@ -177,6 +221,69 @@ export default function Profile() {
                 </button>
               </div>
             </form>
+
+            {/* Password Reset in Easy Mode */}
+            <div className="mt-12 pt-8 border-t-2 border-gray-200">
+              <h2 className="em-heading">Change Password</h2>
+              {passwordSuccess && (
+                <div className="em-success">✓ Password changed successfully!</div>
+              )}
+              {passwordError && (
+                <div className="bg-red-100 border-2 border-red-500 text-red-700 p-4 rounded-xl mb-6 text-xl font-bold">
+                  {passwordError}
+                </div>
+              )}
+              <form onSubmit={handlePasswordSubmit} className="em-form-grid">
+                <div className="em-full-width">
+                  <label htmlFor="em-oldPassword" className="em-label">Current Password</label>
+                  <input
+                    id="em-oldPassword"
+                    type="password"
+                    name="oldPassword"
+                    value={passwordData.oldPassword}
+                    onChange={handlePasswordChange}
+                    placeholder="Enter your current password"
+                    className="em-input"
+                    required
+                  />
+                </div>
+                <div className="em-full-width">
+                  <label htmlFor="em-newPassword" className="em-label">New Password</label>
+                  <input
+                    id="em-newPassword"
+                    type="password"
+                    name="newPassword"
+                    value={passwordData.newPassword}
+                    onChange={handlePasswordChange}
+                    placeholder="Enter new password (min. 6 characters)"
+                    className="em-input"
+                    required
+                  />
+                </div>
+                <div className="em-full-width">
+                  <label htmlFor="em-confirmPassword" className="em-label">Confirm New Password</label>
+                  <input
+                    id="em-confirmPassword"
+                    type="password"
+                    name="confirmPassword"
+                    value={passwordData.confirmPassword}
+                    onChange={handlePasswordChange}
+                    placeholder="Confirm new password"
+                    className="em-input"
+                    required
+                  />
+                </div>
+                <div className="em-full-width">
+                  <button
+                    type="submit"
+                    className="em-btn-primary w-full disabled:opacity-50"
+                    disabled={isChangingPassword}
+                  >
+                    {isChangingPassword ? "Changing…" : "Change Password"}
+                  </button>
+                </div>
+              </form>
+            </div>
           </section>
         </div>
       </div>
@@ -387,6 +494,74 @@ export default function Profile() {
                 Cancel
               </button>
             </div>
+          </form>
+        </div>
+
+        {/* Password Reset Section */}
+        <div className="mt-8 bg-white border border-blue-100 rounded-xl p-6">
+          <h2 className="text-sm font-semibold text-[var(--clr-primary)] uppercase tracking-wide mb-3">Change Password</h2>
+          
+          {passwordSuccess && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4 text-sm font-medium flex items-center gap-2">
+              <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              Password changed successfully!
+            </div>
+          )}
+          {passwordError && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-4 text-sm font-medium">
+              {passwordError}
+            </div>
+          )}
+
+          <form onSubmit={handlePasswordSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+              <input
+                type="password"
+                name="oldPassword"
+                value={passwordData.oldPassword}
+                onChange={handlePasswordChange}
+                placeholder="Enter your current password"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--clr-primary)] transition"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+              <input
+                type="password"
+                name="newPassword"
+                value={passwordData.newPassword}
+                onChange={handlePasswordChange}
+                placeholder="Enter new password (min. 6 characters)"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--clr-primary)] transition"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+              <input
+                type="password"
+                name="confirmPassword"
+                value={passwordData.confirmPassword}
+                onChange={handlePasswordChange}
+                placeholder="Confirm new password"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--clr-primary)] transition"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isChangingPassword}
+              className="w-full bg-[var(--clr-primary)] text-white py-2.5 rounded-lg font-semibold hover:bg-[var(--clr-primary-hover)] hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50"
+            >
+              {isChangingPassword ? "Changing…" : "Change Password"}
+            </button>
           </form>
         </div>
 
