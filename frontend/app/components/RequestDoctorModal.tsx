@@ -72,8 +72,8 @@ export default function RequestDoctorModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/25 backdrop-blur-[2px] p-4">
-      <div className="w-full max-w-3xl max-h-[90vh] rounded-2xl border border-slate-200/80 bg-white/95 shadow-[0_24px_60px_-20px_rgba(15,23,42,0.45)] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/25 backdrop-blur-[2px] p-4" onClick={onClose}>
+      <div className="w-full max-w-3xl max-h-[90vh] rounded-2xl border border-slate-200/80 bg-white/95 shadow-[0_24px_60px_-20px_rgba(15,23,42,0.45)] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="sticky top-0 bg-white/95 border-b border-gray-200 p-6 flex justify-between items-center backdrop-blur-sm">
           <h2 className="text-2xl font-bold text-gray-900">Request Practitioner</h2>
           <button
@@ -98,7 +98,7 @@ export default function RequestDoctorModal({
               name="doctorType"
               value={formData.doctorType}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--clr-accent)] focus:border-transparent"
             >
               <option value="">Select a doctor type</option>
               {doctorTypes.map((type) => (
@@ -117,7 +117,7 @@ export default function RequestDoctorModal({
             
             {!showMap ? (
               <div className="space-y-3">
-                <div className="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-transparent focus-within:border-transparent transition-all">
+                <div className="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-[var(--clr-accent)] focus-within:border-transparent focus-within:border-transparent transition-all">
                   <textarea
                     name="address"
                     value={formData.address}
@@ -129,7 +129,7 @@ export default function RequestDoctorModal({
                   <button
                     type="button"
                     onClick={() => setShowMap(true)}
-                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors duration-200 flex-shrink-0 m-1"
+                    className="p-2 text-(--clr-primary) hover:text-(--clr-primary-hover) hover:bg-(--clr-accent-light) rounded transition-colors duration-200 shrink-0 m-1"
                     title="Pinpoint location on map"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,12 +165,12 @@ export default function RequestDoctorModal({
                   <button
                     type="button"
                     onClick={() => setShowMap(false)}
-                    className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors duration-200"
+                    className="flex-1 bg-(--clr-primary) text-white px-4 py-2 rounded-lg font-medium hover:bg-(--clr-primary-hover) transition-colors duration-200"
                   >
                     Done
                   </button>
                   {selectedLocation && (
-                    <div className="flex-1 bg-teal-50 border border-teal-200 px-4 py-2 rounded-lg text-sm text-teal-700 flex items-center">
+                    <div className="flex-1 bg-[var(--clr-success-bg)] border border-[#d0e8e4] px-4 py-2 rounded-lg text-sm text-[var(--clr-accent-muted)] flex items-center">
                       ✓ {selectedLocation.address}
                     </div>
                   )}
@@ -194,7 +194,7 @@ export default function RequestDoctorModal({
               onChange={handleChange}
               placeholder="Explain your medical situation, symptoms, or concerns. This helps the doctor understand your needs before accepting your request."
               rows={5}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--clr-accent)] focus:border-transparent resize-none"
             />
           </div>
 
@@ -202,7 +202,7 @@ export default function RequestDoctorModal({
           <div className="flex gap-4 pt-4">
             <button
               type="submit"
-              className="flex-1 bg-teal-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-teal-700 active:bg-teal-800 transition-colors duration-200"
+              className="flex-1 bg-(--clr-primary) text-white px-6 py-3 rounded-lg font-semibold hover:bg-(--clr-primary-hover) active:bg-(--clr-primary) transition-colors duration-200"
             >
               Submit Request
             </button>

@@ -11,6 +11,7 @@ import { useEffect } from "react";
 import type { Route } from "./+types/root";
 import "./app.css";
 import { EasyModeProvider, useEasyMode } from "./components/EasyModeContext";
+import { AuthProvider } from "./components/AuthContext";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -59,9 +60,11 @@ function AppContent() {
 
 export default function App() {
   return (
-    <EasyModeProvider>
-      <AppContent />
-    </EasyModeProvider>
+    <AuthProvider>
+      <EasyModeProvider>
+        <AppContent />
+      </EasyModeProvider>
+    </AuthProvider>
   );
 }
 

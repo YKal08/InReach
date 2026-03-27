@@ -1,8 +1,9 @@
 import type { Route } from "./+types/login";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useState } from "react";
 import Navbar from "../components/Navbar";
 import { useEasyMode } from "../components/EasyModeContext";
+import { useAuth } from "../components/AuthContext";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -13,12 +14,26 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Login() {
   const { isEasyMode } = useEasyMode();
+  const { login } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({ email, password });
+    setError("");
+    setIsLoading(true);
+    try {
+      await login(email, password);
+      navigate("/home"); // Or dashboard
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Invalid email or password. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isEasyMode) {
@@ -29,6 +44,13 @@ export default function Login() {
           <section className="em-card">
             <h1 className="em-heading">Welcome Back</h1>
             <p className="em-body">Sign in to your account.</p>
+            
+            {error && (
+              <div className="bg-red-100 border-2 border-red-500 text-red-700 p-4 rounded-xl mb-6 text-xl font-bold animate-pulse">
+                {error}
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="em-form-grid">
               <div>
                 <label htmlFor="em-email" className="em-label">Email Address</label>
@@ -55,12 +77,18 @@ export default function Login() {
                 />
               </div>
               <div className="em-full-width">
-                <button type="submit" className="em-btn-primary w-full">Sign In</button>
+                <button 
+                  type="submit" 
+                  className="em-btn-primary w-full disabled:opacity-50"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Signing In..." : "Sign In"}
+                </button>
               </div>
             </form>
             <p className="em-body mt-6">
               Don't have an account?{" "}
-              <Link to="/register" className="text-teal-700 font-bold underline">Register here</Link>
+              <Link to="/register" className="text-(--clr-primary) hover:text-(--clr-primary-hover) font-bold underline">Register here</Link>
             </p>
           </section>
         </div>
@@ -69,7 +97,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <Navbar />
       <div className="flex justify-center py-12 px-4">
         <div className="max-w-md w-full">
@@ -79,6 +107,12 @@ export default function Login() {
               <p className="text-gray-600">Sign in to your account</p>
             </div>
 
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-lg mb-4 text-sm font-medium text-center">
+                {error}
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="animate-slide-in-up [animation-delay:100ms]">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
@@ -87,7 +121,7 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-600 transition-all duration-200"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-(--clr-accent) transition-all duration-200"
                   required
                 />
               </div>
@@ -99,22 +133,23 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-600 transition-all duration-200"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-(--clr-accent) transition-all duration-200"
                   required
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full bg-teal-600 text-white py-2 rounded-lg font-bold hover:bg-teal-700 hover:scale-105 active:scale-95 transition-all duration-200 mt-6 animate-slide-in-up [animation-delay:300ms]"
+                className="w-full bg-(--clr-primary) text-white py-2 rounded-lg font-bold hover:bg-(--clr-primary-hover) hover:scale-105 active:scale-95 transition-all duration-200 mt-6 animate-slide-in-up [animation-delay:300ms] disabled:opacity-50"
+                disabled={isLoading}
               >
-                Sign In
+                {isLoading ? "Signing In..." : "Sign In"}
               </button>
             </form>
 
             <p className="text-center text-gray-600 mt-6 animate-fade-in [animation-delay:400ms]">
               Don't have an account?{" "}
-              <Link to="/register" className="text-teal-600 hover:text-teal-700 font-bold hover:underline transition-all duration-200">
+              <Link to="/register" className="text-(--clr-primary) hover:text-(--clr-primary-hover) font-bold hover:underline transition-all duration-200">
                 Register here
               </Link>
             </p>

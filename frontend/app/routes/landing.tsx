@@ -3,7 +3,7 @@ import Navbar from "../components/Navbar";
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <Navbar />
       
       <div className="max-w-4xl mx-auto px-4 py-16">
@@ -19,7 +19,7 @@ export default function Landing() {
           <div className="flex flex-col sm:flex-row gap-4 animate-slide-in-up [animation-delay:200ms]">
             <Link
               to="/register"
-              className="bg-teal-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-teal-700 hover:scale-105 active:scale-95 transition-all duration-200 text-center"
+              className="bg-(--clr-primary) text-white px-8 py-3 rounded-lg font-semibold hover:bg-(--clr-primary-hover) active:bg-(--clr-primary) transition-all duration-200 text-center"
             >
               Get Started
             </Link>
