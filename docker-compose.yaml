@@ -2,46 +2,59 @@ services:
   db:
     image: postgres:16-alpine
     container_name: inreach-db
+    env_file:
+      - .env
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: ./backend
     container_name: inreach-backend
+    env_file:
+      - .env
     ports:
       - "8080:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
-      - SPRING_PROFILES_ACTIVE=production
-      - LOG_LEVEL_SPRING_SECURITY=INFO
-      - SERVER_PORT=8080
-      - DB_DRIVER=${DB_DRIVER}
-      - DB_URL=${DB_URL}
-      - DB_USERNAME=${POSTGRES_USER}
-      - DB_PASSWORD=${POSTGRES_PASSWORD}
-      - JPA_SHOW_SQL=${JPA_SHOW_SQL}
-      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=${DB_DRIVER}
-      - SPRING_DATASOURCE_URL=${DB_URL}
-      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
-      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=${SPRING_JPA_HIBERNATE_DDL_AUTO}
+      SERVER_PORT: 8080
+      LOG_LEVEL_SPRING_SECURITY: INFO
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
+      DB_USERNAME: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_DRIVER: org.postgresql.Driver
+      JPA_HIBERNATE_DDL_AUTO: update
+      JPA_SHOW_SQL: false
+      JPA_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-3600000}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ADMIN_EGN: ${ADMIN_EGN}
 
   frontend:
     build: ./frontend
     container_name: inreach-frontend
+    env_file:
+      - .env
     ports:
       - "3000:3000"
     depends_on:
       - backend
     environment:
-      - API_URL=${API_URL}
+      API_URL: ${API_URL:-http://backend:8080}
 
 volumes:
   postgres_data:
