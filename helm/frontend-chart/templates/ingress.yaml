@@ -35,9 +35,13 @@ spec:
             {{- end }}
             backend:
               service:
+                {{- if .serviceName }}
+                name: {{ .serviceName }}
+                {{- else }}
                 name: {{ include "frontend-chart.fullname" $ }}
+                {{- end }}
                 port:
-                  number: {{ $.Values.service.port }}
+                  number: {{ .servicePort | default $.Values.service.port }}
           {{- end }}
     {{- end }}
 {{- end }}
