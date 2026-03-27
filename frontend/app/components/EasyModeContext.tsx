@@ -10,9 +10,10 @@ export const EasyModeContext = createContext<EasyModeContextType | undefined>(un
 export function EasyModeProvider({ children }: { children: ReactNode }) {
   const [isEasyMode, setIsEasyMode] = useState(() => {
     try {
-      return localStorage.getItem("easyMode") === "true";
+      const stored = localStorage.getItem("easyMode");
+      return stored === null ? true : stored === "true";
     } catch {
-      return false;
+      return true;
     }
   });
 

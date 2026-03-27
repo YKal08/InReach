@@ -5,7 +5,7 @@ export default function Navbar() {
   const { isEasyMode, toggleEasyMode } = useEasyMode();
 
   return (
-    <nav className="w-full bg-teal-800 border-b border-teal-900 shadow-md">
+    <nav className="w-full bg-[var(--clr-nav)] border-b border-[var(--clr-nav-dark)] shadow-md">
       <div
         className={`${
           isEasyMode
@@ -13,7 +13,7 @@ export default function Navbar() {
             : "max-w-7xl mx-auto px-4 py-2.5"
         } flex justify-between items-center`}
       >
-        {/* Left: Brand + nav links */}
+        {/* Left */}
         <div className="flex items-center gap-3">
           <Link
             to="/home"
@@ -21,24 +21,23 @@ export default function Navbar() {
           >
             {isEasyMode ? "Home" : "InReach"}
           </Link>
-          <div className="h-5 w-px bg-teal-600" />
+          <div className="h-5 w-px bg-white opacity-30" />
           <Link
             to="/doctors"
-            className="text-gray-300 hover:text-white font-medium transition py-1 hidden sm:inline text-sm"
+            className="text-white hover:text-gray-200 font-medium transition py-1 hidden sm:inline text-sm"
           >
             Doctors
           </Link>
         </div>
 
-        {/* Right: Easy Mode toggle + auth links */}
+        {/* Right */}
         <div className="flex gap-3 items-center">
           <div className="flex items-center gap-2">
-            <span className="text-gray-300 text-sm font-medium hidden sm:inline">Easy Mode</span>
-            {/* Toggle switch — identical shape in both modes */}
+            <span className="text-white text-sm font-medium hidden sm:inline">Easy Mode</span>
             <button
               onClick={toggleEasyMode}
               className={`relative inline-flex h-6 w-10 items-center rounded-full ${
-                isEasyMode ? "bg-teal-500" : "bg-gray-500"
+                isEasyMode ? "bg-[var(--clr-primary)]" : "bg-white/30"
               }`}
               title={isEasyMode ? "Switch to normal mode" : "Switch to easy mode"}
             >
@@ -52,13 +51,13 @@ export default function Navbar() {
 
           <Link
             to="/login"
-            className="text-gray-300 hover:text-white font-medium transition py-1 whitespace-nowrap text-sm"
+            className="text-white hover:text-gray-200 font-medium transition py-1 whitespace-nowrap text-sm"
           >
             Login
           </Link>
           <Link
             to="/register"
-            className="bg-teal-600 text-white px-3 py-1.5 rounded-md hover:bg-teal-700 font-medium transition whitespace-nowrap text-sm"
+            className="bg-[var(--clr-primary)] text-white px-3 py-1.5 rounded-md hover:bg-[var(--clr-nav-light)] font-medium transition whitespace-nowrap text-sm"
           >
             Register
           </Link>

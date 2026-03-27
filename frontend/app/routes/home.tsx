@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import Navbar from "../components/Navbar";
 import { useEasyMode } from "../components/EasyModeContext";
 import RequestDoctorModal from "../components/RequestDoctorModal";
+import { useAuth } from "../components/AuthContext";
 
 const MapComponent = lazy(() => import("../components/MapPicker"));
 
@@ -11,6 +12,7 @@ const pendingRequests: any[] = [];
 
 export default function Home() {
   const { isEasyMode } = useEasyMode();
+  const { user } = useAuth();
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
 
   // Easy Mode inline form state
@@ -103,7 +105,7 @@ export default function Home() {
                     <button
                       type="button"
                       onClick={() => setShowMap(true)}
-                      className="p-3 text-gray-500 hover:text-teal-600 hover:bg-gray-50 border-l border-gray-300"
+                      className="p-3 text-gray-500 hover:text-[var(--clr-accent)] hover:bg-gray-50 border-l border-gray-300"
                       title="Pick on map"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -119,7 +121,7 @@ export default function Home() {
                     </Suspense>
                     <div className="flex gap-3">
                       <button type="button" onClick={() => { setShowMap(false); setSelectedLocation(null); setFormData((p) => ({ ...p, address: "" })); }} className="flex-1 border-2 border-gray-300 text-gray-700 px-4 py-2.5 rounded-lg font-medium">Cancel</button>
-                      <button type="button" onClick={() => setShowMap(false)} className="flex-1 bg-gray-100 text-gray-700 px-4 py-2.5 rounded-lg font-medium">Done</button>
+                      <button type="button" onClick={() => setShowMap(false)} className="flex-1 bg-(--clr-primary) text-white px-4 py-2.5 rounded-lg font-medium hover:bg-(--clr-primary-hover) transition-colors duration-200">Done</button>
                     </div>
                   </div>
                 )}
@@ -178,31 +180,63 @@ export default function Home() {
 
   // ── Normal Mode ──────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <Navbar />
 
       <div className="max-w-5xl mx-auto px-4 py-12">
+        {/* Profile Identity */}
+        <div className="mb-10 pl-1">
+          <h1 className="text-3xl font-bold text-gray-900 border-b-2 border-gray-100 pb-2 mb-1">
+            {user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : "Patient Dashboard"}
+          </h1>
+          <p className="text-xs text-gray-400 font-medium tracking-widest opacity-60">
+            EGN: {user?.egn || "0000000000"}
+          </p>
+        </div>
 
-        {/* Action Cards */}
+        {/* Dashboard Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Request Practitioner */}
+          
+          {/* Last Checkup Box (Simplified) */}
+          <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col min-h-[160px]">
+            <p className="text-gray-500 text-xs uppercase tracking-wide mb-2 font-bold">Health History</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Last Checkup</h2>
+            <div className="mt-auto">
+              <p className="text-xs text-gray-400 italic leading-relaxed">
+                * This feature requires an established connection with the official Bulgarian healthcare system (HNIS).
+              </p>
+            </div>
+          </div>
+
+          {/* Condition Overview (Simplified) */}
+          <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col min-h-[160px]">
+            <p className="text-gray-500 text-xs uppercase tracking-wide mb-2 font-bold">Health Summary</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Condition Overview</h2>
+            <div className="mt-auto">
+              <p className="text-xs text-gray-400 italic leading-relaxed">
+                * Health status tracking requires integration with national healthcare databases.
+              </p>
+            </div>
+          </div>
+
+          {/* Request Practitioner (Existing) */}
           <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col">
-            <p className="text-gray-500 text-xs uppercase tracking-wide mb-2">Healthcare</p>
+            <p className="text-gray-500 text-xs uppercase tracking-wide mb-2 font-bold">Healthcare</p>
             <h2 className="text-xl font-bold text-gray-900 mb-2">Request a Practitioner</h2>
             <p className="text-sm text-gray-600 mb-6 flex-grow">
               Submit a request to connect with a qualified medical professional in your area.
             </p>
             <button
               onClick={() => setIsRequestModalOpen(true)}
-              className="block w-full bg-teal-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-teal-700 active:bg-teal-800 transition-colors duration-200 text-center"
+              className="block w-full bg-[var(--clr-primary)] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[var(--clr-primary-hover)] active:bg-[var(--clr-primary)] transition-colors duration-200 text-center"
             >
               Make a Request
             </button>
           </div>
 
-          {/* Pending Requests */}
+          {/* Pending Requests (Existing) */}
           <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col">
-            <p className="text-gray-500 text-xs uppercase tracking-wide mb-2">Pending Requests</p>
+            <p className="text-gray-500 text-xs uppercase tracking-wide mb-2 font-bold">Status Monitor</p>
             <h2 className="text-xl font-bold text-gray-900 mb-2">{pendingRequests.length} Request{pendingRequests.length !== 1 ? "s" : ""}</h2>
             <p className="text-sm text-gray-600 mb-6 flex-grow">
               View the status of your submitted requests and track their progress.
@@ -218,7 +252,7 @@ export default function Home() {
 
         {/* Information Section */}
         <div className="bg-white border border-gray-200 p-8 rounded-lg shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-700 uppercase tracking-wide mb-4">System Information</h2>
+          <h2 className="text-lg font-semibold text-gray-700 uppercase tracking-wide mb-4">InReach Information</h2>
           <div className="space-y-3 text-gray-600 text-sm">
             <p>All consultations are conducted by registered medical professionals with appropriate credentials and licensing.</p>
             <p>Patient records are encrypted and stored securely in compliance with health data protection standards.</p>
