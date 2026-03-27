@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import Navbar from "../components/Navbar";
+import { useRoleGuard } from "../utils/useRoleGuard";
 
 export default function RequestDoctor() {
   const navigate = useNavigate();
+  const { isLoading } = useRoleGuard("PATIENT");
   const [formData, setFormData] = useState({
     doctorType: "",
     address: "",
@@ -41,6 +43,8 @@ export default function RequestDoctor() {
     // Redirect back to home after successful submission
     navigate("/home");
   };
+
+  if (isLoading) return null;
 
   return (
     <div className="min-h-screen bg-gray-50">

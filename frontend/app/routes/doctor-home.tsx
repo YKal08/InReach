@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar";
 import { useEasyMode } from "../components/EasyModeContext";
 import { calculateDistance } from "../utils/distance";
 import GoogleMapsModal from "../components/GoogleMapsModal";
+import { useRoleGuard } from "../utils/useRoleGuard";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface VisitRequest {
@@ -139,6 +140,10 @@ function buildSingleExternalUrl(origin: { lat: number; lng: number }, stop: Visi
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function DoctorHome() {
   const { isEasyMode } = useEasyMode();
+
+  // Doctor-only guard — redirects patients to /home, guests to /login
+  const { isLoading: authLoading } = useRoleGuard("DOCTOR");
+
   const [schedule, setSchedule] = useState(DEFAULT_SCHEDULE);
   const [editingSchedule, setEditingSchedule] = useState(false);
   const [requests, setRequests] = useState<VisitRequest[]>(INITIAL_REQUESTS);
@@ -232,6 +237,8 @@ export default function DoctorHome() {
       </div>
     );
   }
+
+  if (authLoading) return null;
 
   // ── EASY MODE ──────────────────────────────────────────────────────────────
   if (isEasyMode) {

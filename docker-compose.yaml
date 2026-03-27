@@ -1,13 +1,37 @@
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: inreach-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   backend:
     build: ./backend
     container_name: inreach-backend
     ports:
       - "8080:8080"
+    depends_on:
+      - db
     environment:
       - SPRING_PROFILES_ACTIVE=production
       - LOG_LEVEL_SPRING_SECURITY=INFO
       - SERVER_PORT=8080
+      - DB_DRIVER=${DB_DRIVER}
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - JPA_SHOW_SQL=${JPA_SHOW_SQL}
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=${DB_DRIVER}
+      - SPRING_DATASOURCE_URL=${DB_URL}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=${SPRING_JPA_HIBERNATE_DDL_AUTO}
 
   frontend:
     build: ./frontend
@@ -17,4 +41,7 @@ services:
     depends_on:
       - backend
     environment:
-      - API_URL=http://backend:8080
+      - API_URL=${API_URL}
+
+volumes:
+  postgres_data:

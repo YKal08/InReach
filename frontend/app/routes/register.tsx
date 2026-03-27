@@ -1,11 +1,12 @@
 import type { Route } from "./+types/register";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useState, lazy, Suspense } from "react";
 import Navbar from "../components/Navbar";
 import TermsModal from "../components/TermsModal";
 import { useEasyMode } from "../components/EasyModeContext";
 import { useAuth } from "../components/AuthContext";
 import { isValidEGN } from "../utils/egn";
+import { useRoleGuard } from "../utils/useRoleGuard";
 
 const MapComponent = lazy(() => import("../components/MapPicker"));
 
@@ -19,6 +20,8 @@ export function meta({ }: Route.MetaArgs) {
 export default function Register() {
   const { isEasyMode } = useEasyMode();
   const { register } = useAuth();
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -40,6 +43,9 @@ export default function Register() {
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
   const [locating, setLocating] = useState(false);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+
+  // Redirect away if already logged in
+  const { isLoading: authLoading } = useRoleGuard("unauthenticated");
 
   const countries = [
     { code: "+1", iso: "US" }, { code: "+44", iso: "GB" }, { code: "+359", iso: "BG" },
@@ -74,7 +80,6 @@ export default function Register() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
-        // Reverse geocode via nominatim (free, no key)
         fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`)
           .then((r) => r.json())
           .then((data) => {
@@ -118,7 +123,8 @@ export default function Register() {
         email: formData.email,
         password: formData.password,
       };
-      await register(backendData);
+      // Pass the picked location so it seeds doctor proximity across the app
+      await register(backendData, selectedLocation ?? undefined);
       setIsSubmitted(true);
     } catch (err: any) {
       setError(err.message || "Registration failed. Please try again or contact support.");
@@ -127,14 +133,12 @@ export default function Register() {
     }
   };
 
-  // Globe icon — for "open map picker"
   const GlobeIcon = () => (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
     </svg>
   );
 
-  // Pin icon — for "use my GPS location"
   const PinIcon = () => (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -142,7 +146,6 @@ export default function Register() {
     </svg>
   );
 
-  // Shared location field — used in both modes
   function LocationField({ inputCls, mapHeight }: { inputCls: string; mapHeight: string }) {
     return (
       <>
@@ -158,7 +161,6 @@ export default function Register() {
               className={`${inputCls} border-0 focus:outline-none focus:ring-0 bg-white`}
               required
             />
-            {/* GPS auto-locate */}
             <button
               type="button"
               onClick={handleAutoLocate}
@@ -172,7 +174,6 @@ export default function Register() {
                 </svg>
               ) : <PinIcon />}
             </button>
-            {/* Open map */}
             <button
               type="button"
               onClick={() => setShowMap(true)}
@@ -199,6 +200,8 @@ export default function Register() {
       </>
     );
   }
+
+  if (authLoading) return null;
 
   // ── Easy Mode ─────────────────────────────────────────────────────────────────
   if (isEasyMode) {

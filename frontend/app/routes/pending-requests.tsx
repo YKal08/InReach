@@ -1,19 +1,23 @@
 import { Link } from "react-router";
 import Navbar from "../components/Navbar";
+import { useRoleGuard } from "../utils/useRoleGuard";
+
+interface PendingRequest {
+  id: string;
+  doctorType: string;
+  situation: string;
+  address: string;
+  submittedDate: string;
+  status: string;
+}
 
 export default function PendingRequests() {
+  const { isLoading } = useRoleGuard("PATIENT");
+
   // TODO: Fetch pending requests from backend
-  const pendingRequests = [
-    // Example data structure:
-    // {
-    //   id: "1",
-    //   doctorType: "General Practitioner",
-    //   situation: "Persistent headaches and fever for 3 days",
-    //   address: "123 Main Street, Downtown, Springfield",
-    //   submittedDate: "2025-03-26",
-    //   status: "pending"
-    // }
-  ];
+  const pendingRequests: PendingRequest[] = [];
+
+  if (isLoading) return null;
 
   return (
     <div className="min-h-screen bg-white">
@@ -42,8 +46,8 @@ export default function PendingRequests() {
           <div className="bg-white border border-gray-200 p-12 rounded-lg shadow-sm text-center">
             <p className="text-gray-600 mb-6">You have no pending requests at this time.</p>
             <Link
-              to="/home"
-              className="inline-block bg-[var(--clr-accent-dark)] text-white px-6 py-3 rounded-lg font-medium hover:bg-[var(--clr-accent-dark)] transition-colors"
+              to="/doctors"
+              className="inline-block bg-[var(--clr-primary)] text-white px-6 py-3 rounded-lg font-medium hover:bg-[var(--clr-primary-hover)] transition-colors"
             >
               Make a New Request
             </Link>

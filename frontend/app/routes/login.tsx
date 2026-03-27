@@ -4,6 +4,7 @@ import { useState } from "react";
 import Navbar from "../components/Navbar";
 import { useEasyMode } from "../components/EasyModeContext";
 import { useAuth } from "../components/AuthContext";
+import { useRoleGuard } from "../utils/useRoleGuard";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -14,12 +15,15 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Login() {
   const { isEasyMode } = useEasyMode();
-  const { login } = useAuth();
+  const { login, isDoctor } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Redirect away if already logged in
+  const { isLoading: authLoading } = useRoleGuard("unauthenticated");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,14 +31,24 @@ export default function Login() {
     setIsLoading(true);
     try {
       await login(email, password);
-      navigate("/home"); // Or dashboard
+      // Navigate based on role — isDoctor is updated in context after fetchUserProfile
+      // We read fresh from localStorage since context may not have re-rendered yet
+      // Instead we re-check via the updated auth context value after await
     } catch (err: any) {
       console.error(err);
       setError(err.message || "Invalid email or password. Please try again.");
-    } finally {
       setIsLoading(false);
+      return;
     }
+    // At this point login succeeded; role will be in context.
+    // We need to read from the freshly-set user in context via a callback pattern.
+    // The simplest approach: read roles from localStorage isn't possible (they're in-memory).
+    // So we use a small trick: navigate to /home which has a PATIENT guard —
+    // if they're a doctor the guard will redirect them to /doctor-home automatically.
+    navigate("/home", { replace: true });
   };
+
+  if (authLoading) return null;
 
   if (isEasyMode) {
     return (
@@ -44,9 +58,9 @@ export default function Login() {
           <section className="em-card">
             <h1 className="em-heading">Welcome Back</h1>
             <p className="em-body">Sign in to your account.</p>
-            
+
             {error && (
-              <div className="bg-red-100 border-2 border-red-500 text-red-700 p-4 rounded-xl mb-6 text-xl font-bold animate-pulse">
+              <div className="bg-red-100 border-2 border-red-500 text-red-700 p-4 rounded-xl mb-6 text-xl font-bold">
                 {error}
               </div>
             )}
@@ -77,8 +91,8 @@ export default function Login() {
                 />
               </div>
               <div className="em-full-width">
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="em-btn-primary w-full disabled:opacity-50"
                   disabled={isLoading}
                 >

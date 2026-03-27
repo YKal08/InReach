@@ -5,10 +5,10 @@ import { useEasyMode } from "../components/EasyModeContext";
 import { useAuth } from "../components/AuthContext";
 import { calculateDistance } from "../utils/distance";
 import DoctorDetailModal from "../components/DoctorDetailModal";
+import { useRoleGuard } from "../utils/useRoleGuard";
 
 const MapComponent = lazy(() => import("../components/MapPicker"));
 
-// ── Doctor data (same as doctors.tsx) ────────────────────────────────────────
 interface Doctor {
   id: number;
   name: string;
@@ -25,40 +25,59 @@ interface Doctor {
 }
 
 const ALL_DOCTORS: Doctor[] = [
-  { id: 1, name: "Dr. Maria Ivanova",      specialty: "General Medicine", location: "Sofia",   phone: "+359 (2) 123-4567",   email: "maria.ivanova@inreach.bg",      bio: "Experienced general practitioner with a passion for preventive care and patient education.",          availability: "Mon-Fri, 9AM-5PM",         image: "https://ui-avatars.com/api/?name=Maria+Ivanova&background=4a4699&color=fff&bold=true&size=200",       lat: 42.6977, lng: 23.3219 },
-  { id: 2, name: "Dr. Alexander Petrov",   specialty: "Cardiology",       location: "Plovdiv", phone: "+359 (32) 234-5678",  email: "alex.petrov@inreach.bg",        bio: "Specializing in cardiovascular diseases with advanced diagnostic expertise.",                          availability: "Tue-Sat, 10AM-6PM",        image: "https://ui-avatars.com/api/?name=Alexander+Petrov&background=4a4699&color=fff&bold=true&size=200",    lat: 42.1354, lng: 24.7453 },
-  { id: 3, name: "Dr. Elena Georgieva",    specialty: "Pediatrics",       location: "Varna",   phone: "+359 (52) 345-6789",  email: "elena.georgieva@inreach.bg",    bio: "Child health specialist dedicated to providing compassionate pediatric care.",                          availability: "Mon-Thu, 8AM-4PM",         image: "https://ui-avatars.com/api/?name=Elena+Georgieva&background=4a4699&color=fff&bold=true&size=200",     lat: 43.2141, lng: 27.9147 },
-  { id: 4, name: "Dr. Ivan Dimitrov",      specialty: "Orthopedics",      location: "Burgas",  phone: "+359 (56) 456-7890",  email: "ivan.dimitrov@inreach.bg",      bio: "Expert in bone and joint conditions with surgical and non-surgical treatment options.",                 availability: "Wed-Sun, 11AM-7PM",        image: "https://ui-avatars.com/api/?name=Ivan+Dimitrov&background=4a4699&color=fff&bold=true&size=200",      lat: 42.5048, lng: 27.4626 },
-  { id: 5, name: "Dr. Sofia Nikolova",     specialty: "Dermatology",      location: "Sofia",   phone: "+359 (2) 567-8901",   email: "sofia.nikolova@inreach.bg",     bio: "Skin health specialist providing diagnostic and therapeutic dermatological services.",                  availability: "Tue-Sat, 9AM-5PM",         image: "https://ui-avatars.com/api/?name=Sofia+Nikolova&background=4a4699&color=fff&bold=true&size=200",     lat: 42.6977, lng: 23.3219 },
-  { id: 6, name: "Dr. Yorgos Papadopoulos",specialty: "Neurology",        location: "Plovdiv", phone: "+359 (32) 678-9012",  email: "yorgos.papadopoulos@inreach.bg",bio: "Neurological disorders specialist with comprehensive diagnostic and treatment expertise.",                availability: "Mon, Wed, Fri, 9AM-3PM",   image: "https://ui-avatars.com/api/?name=Yorgos+Papadopoulos&background=4a4699&color=fff&bold=true&size=200",lat: 42.1354, lng: 24.7453 },
+  { id: 1, name: "Dr. Maria Ivanova",       specialty: "General Medicine", location: "Sofia",   phone: "+359 (2) 123-4567",   email: "maria.ivanova@inreach.bg",      bio: "Experienced general practitioner with a passion for preventive care and patient education.",          availability: "Mon-Fri, 9AM-5PM",       image: "https://ui-avatars.com/api/?name=Maria+Ivanova&background=4a4699&color=fff&bold=true&size=200",       lat: 42.6977, lng: 23.3219 },
+  { id: 2, name: "Dr. Alexander Petrov",    specialty: "Cardiology",       location: "Plovdiv", phone: "+359 (32) 234-5678",  email: "alex.petrov@inreach.bg",        bio: "Specializing in cardiovascular diseases with advanced diagnostic expertise.",                          availability: "Tue-Sat, 10AM-6PM",      image: "https://ui-avatars.com/api/?name=Alexander+Petrov&background=4a4699&color=fff&bold=true&size=200",    lat: 42.1354, lng: 24.7453 },
+  { id: 3, name: "Dr. Elena Georgieva",     specialty: "Pediatrics",       location: "Varna",   phone: "+359 (52) 345-6789",  email: "elena.georgieva@inreach.bg",    bio: "Child health specialist dedicated to providing compassionate pediatric care.",                          availability: "Mon-Thu, 8AM-4PM",       image: "https://ui-avatars.com/api/?name=Elena+Georgieva&background=4a4699&color=fff&bold=true&size=200",     lat: 43.2141, lng: 27.9147 },
+  { id: 4, name: "Dr. Ivan Dimitrov",       specialty: "Orthopedics",      location: "Burgas",  phone: "+359 (56) 456-7890",  email: "ivan.dimitrov@inreach.bg",      bio: "Expert in bone and joint conditions with surgical and non-surgical treatment options.",                 availability: "Wed-Sun, 11AM-7PM",      image: "https://ui-avatars.com/api/?name=Ivan+Dimitrov&background=4a4699&color=fff&bold=true&size=200",      lat: 42.5048, lng: 27.4626 },
+  { id: 5, name: "Dr. Sofia Nikolova",      specialty: "Dermatology",      location: "Sofia",   phone: "+359 (2) 567-8901",   email: "sofia.nikolova@inreach.bg",     bio: "Skin health specialist providing diagnostic and therapeutic dermatological services.",                  availability: "Tue-Sat, 9AM-5PM",       image: "https://ui-avatars.com/api/?name=Sofia+Nikolova&background=4a4699&color=fff&bold=true&size=200",     lat: 42.6977, lng: 23.3219 },
+  { id: 6, name: "Dr. Yorgos Papadopoulos", specialty: "Neurology",       location: "Plovdiv", phone: "+359 (32) 678-9012",  email: "yorgos.papadopoulos@inreach.bg",bio: "Neurological disorders specialist with comprehensive diagnostic and treatment expertise.",                availability: "Mon, Wed, Fri, 9AM-3PM", image: "https://ui-avatars.com/api/?name=Yorgos+Papadopoulos&background=4a4699&color=fff&bold=true&size=200",lat: 42.1354, lng: 24.7453 },
 ];
 
 const pendingRequests: any[] = [];
 
 export default function Home() {
   const { isEasyMode } = useEasyMode();
-  const { user } = useAuth();
+  const { user, registrationLocation } = useAuth();
 
-  // ── Doctor proximity (used in easy mode) ───────────────────────────────────
+  // Patient-only guard — redirects doctors to /doctor-home, guests to /login
+  const { isLoading: authLoading } = useRoleGuard("PATIENT");
+
+  // ── Doctor proximity ───────────────────────────────────────────────────────
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationStatus, setLocationStatus] = useState<"loading" | "granted" | "default">("loading");
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [requestSentIds, setRequestSentIds] = useState<number[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSpecialty, setSelectedSpecialty] = useState("");
   const [maxDistance] = useState(200);
 
+  const specialties = Array.from(new Set(ALL_DOCTORS.map((d) => d.specialty))).sort();
+
   useEffect(() => {
+    // Seed with registration location first
+    if (registrationLocation) {
+      setUserLocation({ lat: registrationLocation.lat, lng: registrationLocation.lng });
+      setLocationStatus("granted");
+    }
+
     if (!("geolocation" in navigator)) {
-      setUserLocation({ lat: 42.6977, lng: 23.3219 });
-      setLocationStatus("default");
+      if (!registrationLocation) {
+        setUserLocation({ lat: 42.6977, lng: 23.3219 });
+        setLocationStatus("default");
+      }
       return;
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => { setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocationStatus("granted"); },
-      () => { setUserLocation({ lat: 42.6977, lng: 23.3219 }); setLocationStatus("default"); }
+      () => {
+        if (!registrationLocation) {
+          setUserLocation({ lat: 42.6977, lng: 23.3219 });
+          setLocationStatus("default");
+        }
+      }
     );
-  }, []);
+  }, [registrationLocation]);
 
   const doctorsWithDistance = useMemo(() => {
     if (!userLocation) return ALL_DOCTORS;
@@ -69,12 +88,13 @@ export default function Home() {
     return doctorsWithDistance
       .filter((d) => {
         const matchesSearch = d.name.toLowerCase().includes(searchQuery.toLowerCase()) || d.specialty.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesSearch && (d.distance === undefined || d.distance <= maxDistance);
+        const matchesSpecialty = !selectedSpecialty || d.specialty === selectedSpecialty;
+        return matchesSearch && matchesSpecialty && (d.distance === undefined || d.distance <= maxDistance);
       })
       .sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
-  }, [doctorsWithDistance, searchQuery, maxDistance]);
+  }, [doctorsWithDistance, searchQuery, selectedSpecialty, maxDistance]);
 
-  // ── Normal mode request form state ─────────────────────────────────────────
+  // ── Normal mode request form state ────────────────────────────────────────
   const [showMap, setShowMap] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
   const [requestForm, setRequestForm] = useState({ doctorType: "", address: "", situation: "", notes: "" });
@@ -82,6 +102,14 @@ export default function Home() {
   const [locating, setLocating] = useState(false);
 
   const doctorTypes = ["General Practitioner", "Pediatrician", "Cardiologist", "Dermatologist", "Orthopedic Surgeon", "Neurologist", "Psychiatrist", "Dentist", "Eye Specialist", "ENT Specialist"];
+
+  // Pre-fill address from registration location
+  useEffect(() => {
+    if (registrationLocation && !requestForm.address) {
+      setSelectedLocation(registrationLocation);
+      setRequestForm((prev) => ({ ...prev, address: registrationLocation.address }));
+    }
+  }, [registrationLocation]);
 
   const handleRequestChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -118,14 +146,16 @@ export default function Home() {
       return;
     }
     console.log("Request:", requestForm, selectedLocation);
-    setRequestForm({ doctorType: "", address: "", situation: "", notes: "" });
-    setSelectedLocation(null);
+    setRequestForm({ doctorType: "", address: registrationLocation?.address ?? "", situation: "", notes: "" });
+    setSelectedLocation(registrationLocation ?? null);
     setShowMap(false);
     setSubmitted(true);
     setTimeout(() => setSubmitted(false), 4000);
   };
 
-  // ── EASY MODE — is the doctors page ────────────────────────────────────────
+  if (authLoading) return null;
+
+  // ── EASY MODE — doctors list with search + specialty filter ────────────────
   if (isEasyMode) {
     return (
       <div className="min-h-screen bg-white">
@@ -142,9 +172,9 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Search */}
-          <div className="flex items-center border-2 border-(--clr-accent) rounded-xl overflow-hidden">
-            <svg className="w-6 h-6 text-gray-400 ml-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {/* Search bar */}
+          <div className="em-card flex items-center gap-3" style={{ padding: "12px 20px" }}>
+            <svg className="w-6 h-6 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
@@ -152,15 +182,51 @@ export default function Home() {
               placeholder="Search by name or specialty…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="em-input border-0 focus:ring-0"
+              className="em-input border-0 focus:ring-0 flex-1"
+              style={{ padding: "0", border: "none", boxShadow: "none" }}
             />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery("")} className="text-gray-400 hover:text-gray-600 shrink-0" style={{ lineHeight: 0 }}>
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          {/* Specialty filter — always visible */}
+          <div className="em-card" style={{ padding: "16px 20px" }}>
+            <label className="em-label" style={{ fontSize: "16px", marginBottom: "8px" }}>Filter by Specialty</label>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedSpecialty("")}
+                className={`px-4 py-2 rounded-full text-base font-semibold border-2 transition-colors ${!selectedSpecialty ? "bg-(--clr-primary) text-white border-(--clr-primary)" : "border-(--clr-accent) text-(--clr-nav) hover:border-(--clr-primary)"}`}
+              >
+                All
+              </button>
+              {specialties.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setSelectedSpecialty(selectedSpecialty === s ? "" : s)}
+                  className={`px-4 py-2 rounded-full text-base font-semibold border-2 transition-colors ${selectedSpecialty === s ? "bg-(--clr-primary) text-white border-(--clr-primary)" : "border-(--clr-accent) text-(--clr-nav) hover:border-(--clr-primary)"}`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Doctor list */}
           <div className="flex flex-col gap-4">
             {filteredDoctors.length === 0 ? (
               <div className="em-card text-center">
-                <p className="em-body text-gray-500">No doctors found. Try a different search.</p>
+                <p className="em-body text-gray-500">No doctors found. Try a different search or specialty.</p>
+                <button
+                  onClick={() => { setSearchQuery(""); setSelectedSpecialty(""); }}
+                  className="em-btn-primary mt-4" style={{ padding: "12px 24px", fontSize: "16px" }}
+                >
+                  Clear Filters
+                </button>
               </div>
             ) : filteredDoctors.map((doctor) => (
               <div

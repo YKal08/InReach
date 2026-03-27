@@ -1,9 +1,11 @@
 import type { Route } from "./+types/doctors";
 import Navbar from "../components/Navbar";
 import { useEasyMode } from "../components/EasyModeContext";
+import { useAuth } from "../components/AuthContext";
 import { useState, useMemo, useEffect } from "react";
 import { calculateDistance } from "../utils/distance";
 import DoctorDetailModal from "../components/DoctorDetailModal";
+import { useRoleGuard } from "../utils/useRoleGuard";
 
 interface Doctor {
   id: number;
@@ -28,16 +30,17 @@ export function meta({ }: Route.MetaArgs) {
 }
 
 const ALL_DOCTORS: Doctor[] = [
-  { id: 1, name: "Dr. Maria Ivanova", specialty: "General Medicine", location: "Sofia", phone: "+359 (2) 123-4567", email: "maria.ivanova@inreach.bg", bio: "Experienced general practitioner with a passion for preventive care and patient education.", availability: "Mon-Fri, 9AM-5PM", image: "https://ui-avatars.com/api/?name=Maria+Ivanova&background=4a4699&color=fff&bold=true&size=200", lat: 42.6977, lng: 23.3219 },
-  { id: 2, name: "Dr. Alexander Petrov", specialty: "Cardiology", location: "Plovdiv", phone: "+359 (32) 234-5678", email: "alex.petrov@inreach.bg", bio: "Specializing in cardiovascular diseases with advanced diagnostic expertise.", availability: "Tue-Sat, 10AM-6PM", image: "https://ui-avatars.com/api/?name=Alexander+Petrov&background=4a4699&color=fff&bold=true&size=200", lat: 42.1354, lng: 24.7453 },
-  { id: 3, name: "Dr. Elena Georgieva", specialty: "Pediatrics", location: "Varna", phone: "+359 (52) 345-6789", email: "elena.georgieva@inreach.bg", bio: "Child health specialist dedicated to providing compassionate pediatric care.", availability: "Mon-Thu, 8AM-4PM", image: "https://ui-avatars.com/api/?name=Elena+Georgieva&background=4a4699&color=fff&bold=true&size=200", lat: 43.2141, lng: 27.9147 },
-  { id: 4, name: "Dr. Ivan Dimitrov", specialty: "Orthopedics", location: "Burgas", phone: "+359 (56) 456-7890", email: "ivan.dimitrov@inreach.bg", bio: "Expert in bone and joint conditions with surgical and non-surgical treatment options.", availability: "Wed-Sun, 11AM-7PM", image: "https://ui-avatars.com/api/?name=Ivan+Dimitrov&background=4a4699&color=fff&bold=true&size=200", lat: 42.5048, lng: 27.4626 },
-  { id: 5, name: "Dr. Sofia Nikolova", specialty: "Dermatology", location: "Sofia", phone: "+359 (2) 567-8901", email: "sofia.nikolova@inreach.bg", bio: "Skin health specialist providing diagnostic and therapeutic dermatological services.", availability: "Tue-Sat, 9AM-5PM", image: "https://ui-avatars.com/api/?name=Sofia+Nikolova&background=4a4699&color=fff&bold=true&size=200", lat: 42.6977, lng: 23.3219 },
-  { id: 6, name: "Dr. Yorgos Papadopoulos", specialty: "Neurology", location: "Plovdiv", phone: "+359 (32) 678-9012", email: "yorgos.papadopoulos@inreach.bg", bio: "Neurological disorders specialist with comprehensive diagnostic and treatment expertise.", availability: "Mon, Wed, Fri, 9AM-3PM", image: "https://ui-avatars.com/api/?name=Yorgos+Papadopoulos&background=4a4699&color=fff&bold=true&size=200", lat: 42.1354, lng: 24.7453 },
+  { id: 1, name: "Dr. Maria Ivanova",       specialty: "General Medicine", location: "Sofia",   phone: "+359 (2) 123-4567",   email: "maria.ivanova@inreach.bg",      bio: "Experienced general practitioner with a passion for preventive care and patient education.",          availability: "Mon-Fri, 9AM-5PM",       image: "https://ui-avatars.com/api/?name=Maria+Ivanova&background=4a4699&color=fff&bold=true&size=200",       lat: 42.6977, lng: 23.3219 },
+  { id: 2, name: "Dr. Alexander Petrov",    specialty: "Cardiology",       location: "Plovdiv", phone: "+359 (32) 234-5678",  email: "alex.petrov@inreach.bg",        bio: "Specializing in cardiovascular diseases with advanced diagnostic expertise.",                          availability: "Tue-Sat, 10AM-6PM",      image: "https://ui-avatars.com/api/?name=Alexander+Petrov&background=4a4699&color=fff&bold=true&size=200",    lat: 42.1354, lng: 24.7453 },
+  { id: 3, name: "Dr. Elena Georgieva",     specialty: "Pediatrics",       location: "Varna",   phone: "+359 (52) 345-6789",  email: "elena.georgieva@inreach.bg",    bio: "Child health specialist dedicated to providing compassionate pediatric care.",                          availability: "Mon-Thu, 8AM-4PM",       image: "https://ui-avatars.com/api/?name=Elena+Georgieva&background=4a4699&color=fff&bold=true&size=200",     lat: 43.2141, lng: 27.9147 },
+  { id: 4, name: "Dr. Ivan Dimitrov",       specialty: "Orthopedics",      location: "Burgas",  phone: "+359 (56) 456-7890",  email: "ivan.dimitrov@inreach.bg",      bio: "Expert in bone and joint conditions with surgical and non-surgical treatment options.",                 availability: "Wed-Sun, 11AM-7PM",      image: "https://ui-avatars.com/api/?name=Ivan+Dimitrov&background=4a4699&color=fff&bold=true&size=200",      lat: 42.5048, lng: 27.4626 },
+  { id: 5, name: "Dr. Sofia Nikolova",      specialty: "Dermatology",      location: "Sofia",   phone: "+359 (2) 567-8901",   email: "sofia.nikolova@inreach.bg",     bio: "Skin health specialist providing diagnostic and therapeutic dermatological services.",                  availability: "Tue-Sat, 9AM-5PM",       image: "https://ui-avatars.com/api/?name=Sofia+Nikolova&background=4a4699&color=fff&bold=true&size=200",     lat: 42.6977, lng: 23.3219 },
+  { id: 6, name: "Dr. Yorgos Papadopoulos", specialty: "Neurology",       location: "Plovdiv", phone: "+359 (32) 678-9012",  email: "yorgos.papadopoulos@inreach.bg",bio: "Neurological disorders specialist with comprehensive diagnostic and treatment expertise.",                availability: "Mon, Wed, Fri, 9AM-3PM", image: "https://ui-avatars.com/api/?name=Yorgos+Papadopoulos&background=4a4699&color=fff&bold=true&size=200",lat: 42.1354, lng: 24.7453 },
 ];
 
 export default function Doctors() {
   const { isEasyMode } = useEasyMode();
+  const { registrationLocation } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
@@ -49,7 +52,16 @@ export default function Doctors() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [requestSentIds, setRequestSentIds] = useState<number[]>([]);
 
+  // Patient-only guard — redirects doctors to /doctor-home, guests to /login
+  const { isLoading: authLoading } = useRoleGuard("PATIENT");
+
   useEffect(() => {
+    // Seed with registration location first; geolocation will override if granted
+    if (registrationLocation) {
+      setUserLocation({ lat: registrationLocation.lat, lng: registrationLocation.lng });
+      setLocationStatus("granted");
+    }
+
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -57,15 +69,18 @@ export default function Doctors() {
           setLocationStatus("granted");
         },
         () => {
-          setUserLocation({ lat: 42.6977, lng: 23.3219 });
-          setLocationStatus("default");
+          // Only fall back to Sofia default if we don't have a registration location
+          if (!registrationLocation) {
+            setUserLocation({ lat: 42.6977, lng: 23.3219 });
+            setLocationStatus("default");
+          }
         }
       );
-    } else {
+    } else if (!registrationLocation) {
       setUserLocation({ lat: 42.6977, lng: 23.3219 });
       setLocationStatus("default");
     }
-  }, []);
+  }, [registrationLocation]);
 
   const doctorsWithDistance = useMemo(() => {
     if (!userLocation) return ALL_DOCTORS;
@@ -91,7 +106,9 @@ export default function Doctors() {
   }, [searchQuery, selectedSpecialty, selectedLocation, doctorsWithDistance, maxDistance]);
 
   const handleOpenDoctor = (doctor: Doctor) => { setSelectedDoctor(doctor); setIsModalOpen(true); };
-  const handleSendRequest = (doctorId: number, notes: string) => { setRequestSentIds((prev) => [...prev, doctorId]); };
+  const handleSendRequest = (doctorId: number) => { setRequestSentIds((prev) => [...prev, doctorId]); };
+
+  if (authLoading) return null;
 
   return (
     <div className="min-h-screen bg-white">
@@ -113,70 +130,122 @@ export default function Doctors() {
           )}
         </div>
 
-        {/* Search and Filters */}
-        <div className="mb-4 relative animate-slide-in-up [animation-delay:200ms]">
-          <div className="bg-white rounded border border-gray-300 shadow-sm hover:shadow-md transition-all duration-200">
-            <div className="flex items-center gap-2 px-3 py-2">
-              <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        {/* ── EASY MODE: search + specialty filter always visible ── */}
+        {isEasyMode ? (
+          <div className="flex flex-col gap-3 animate-slide-in-up [animation-delay:200ms]">
+            {/* Search bar */}
+            <div className="em-card flex items-center gap-3" style={{ padding: "12px 20px" }}>
+              <svg className="w-6 h-6 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <input
                 type="text"
-                placeholder="Search doctors by name or specialty..."
+                placeholder="Search by name or specialty…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 px-2 py-2 focus:outline-none text-sm text-gray-900 placeholder-gray-500"
+                className="em-input border-0 focus:ring-0 flex-1"
+                style={{ padding: "0", border: "none", boxShadow: "none" }}
               />
               {searchQuery && (
-                <button onClick={() => setSearchQuery("")} className="p-1 text-gray-400 hover:text-gray-600 transition">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <button onClick={() => setSearchQuery("")} className="text-gray-400 hover:text-gray-600 shrink-0" style={{ lineHeight: 0 }}>
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                   </svg>
                 </button>
               )}
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="p-2 text-gray-600 hover:bg-gray-100 rounded transition flex items-center gap-1 text-sm font-medium"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                </svg>
-                Filters
-              </button>
             </div>
 
-            {showFilters && (
-              <div className={`absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg z-50 p-5 animate-scale-in grid gap-5 ${isEasyMode ? "grid-cols-2" : "grid-cols-3"}`}>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-2">Specialty</label>
-                  <select value={selectedSpecialty} onChange={(e) => setSelectedSpecialty(e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-(--clr-accent) bg-white text-xs">
-                    <option value="">All Specialties</option>
-                    {specialties.map((s) => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-2">City</label>
-                  <select value={selectedLocation} onChange={(e) => setSelectedLocation(e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-(--clr-accent) bg-white text-xs">
-                    <option value="">All Cities</option>
-                    {locations.map((l) => <option key={l} value={l}>{l}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-2">Max Distance: <strong>{maxDistance} km</strong></label>
-                  <input type="range" min={10} max={500} step={10} value={maxDistance} onChange={(e) => setMaxDistance(parseInt(e.target.value))} className="w-full cursor-pointer accent-(--clr-primary)" />
-                  <div className="flex justify-between text-[10px] text-gray-400 mt-0.5"><span>10 km</span><span>500 km</span></div>
-                </div>
-                <div className={`text-center pt-2 border-t border-gray-200 ${isEasyMode ? "col-span-2" : "col-span-3"}`}>
-                  <button onClick={() => { setSelectedSpecialty(""); setSelectedLocation(""); setMaxDistance(200); }} className="text-xs text-(--clr-accent) hover:text-(--clr-accent-muted) font-semibold transition-all duration-200">
-                    Clear Filters
+            {/* Specialty filter — always visible in easy mode */}
+            <div className="em-card" style={{ padding: "16px 20px" }}>
+              <label className="em-label" style={{ fontSize: "16px", marginBottom: "8px" }}>Filter by Specialty</label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setSelectedSpecialty("")}
+                  className={`px-4 py-2 rounded-full text-base font-semibold border-2 transition-colors ${!selectedSpecialty ? "bg-(--clr-primary) text-white border-(--clr-primary)" : "border-(--clr-accent) text-(--clr-nav) hover:border-(--clr-primary)"}`}
+                >
+                  All
+                </button>
+                {specialties.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setSelectedSpecialty(selectedSpecialty === s ? "" : s)}
+                    className={`px-4 py-2 rounded-full text-base font-semibold border-2 transition-colors ${selectedSpecialty === s ? "bg-(--clr-primary) text-white border-(--clr-primary)" : "border-(--clr-accent) text-(--clr-nav) hover:border-(--clr-primary)"}`}
+                  >
+                    {s}
                   </button>
-                </div>
+                ))}
               </div>
-            )}
+            </div>
           </div>
-        </div>
+        ) : (
+          /* ── NORMAL MODE: combined search + filter dropdown ── */
+          <div className="mb-4 relative animate-slide-in-up [animation-delay:200ms]">
+            <div className="bg-white rounded border border-gray-300 shadow-sm hover:shadow-md transition-all duration-200">
+              <div className="flex items-center gap-2 px-3 py-2">
+                <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Search doctors by name or specialty..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1 px-2 py-2 focus:outline-none text-sm text-gray-900 placeholder-gray-500"
+                />
+                {searchQuery && (
+                  <button onClick={() => setSearchQuery("")} className="p-1 text-gray-400 hover:text-gray-600 transition">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`p-2 rounded transition flex items-center gap-1 text-sm font-medium ${showFilters ? "bg-(--clr-accent-light) text-(--clr-primary)" : "text-gray-600 hover:bg-gray-100"}`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                  Filters
+                  {(selectedSpecialty || selectedLocation || maxDistance < 200) && (
+                    <span className="bg-(--clr-primary) text-white text-[10px] rounded-full px-1.5 py-0.5 leading-none">{[selectedSpecialty, selectedLocation, maxDistance < 200 ? `${maxDistance}km` : ""].filter(Boolean).length}</span>
+                  )}
+                </button>
+              </div>
 
-        {/* Results */}
+              {showFilters && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg z-50 p-5 animate-scale-in grid grid-cols-3 gap-5">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-2">Specialty</label>
+                    <select value={selectedSpecialty} onChange={(e) => setSelectedSpecialty(e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-(--clr-accent) bg-white text-xs">
+                      <option value="">All Specialties</option>
+                      {specialties.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-2">City</label>
+                    <select value={selectedLocation} onChange={(e) => setSelectedLocation(e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-(--clr-accent) bg-white text-xs">
+                      <option value="">All Cities</option>
+                      {locations.map((l) => <option key={l} value={l}>{l}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-2">Max Distance: <strong>{maxDistance} km</strong></label>
+                    <input type="range" min={10} max={500} step={10} value={maxDistance} onChange={(e) => setMaxDistance(parseInt(e.target.value))} className="w-full cursor-pointer accent-(--clr-primary)" />
+                    <div className="flex justify-between text-[10px] text-gray-400 mt-0.5"><span>10 km</span><span>500 km</span></div>
+                  </div>
+                  <div className="col-span-3 text-center pt-2 border-t border-gray-200">
+                    <button onClick={() => { setSelectedSpecialty(""); setSelectedLocation(""); setMaxDistance(200); }} className="text-xs text-(--clr-accent) hover:text-(--clr-accent-muted) font-semibold transition-all duration-200">
+                      Clear Filters
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Results ── */}
         {filteredDoctors.length > 0 ? (
           <>
             <p className="text-xs text-gray-400 opacity-60 mb-6 animate-fade-in">
@@ -184,7 +253,6 @@ export default function Doctors() {
             </p>
 
             {isEasyMode ? (
-              // EASY MODE: use em- classes, match rest of site
               <div className="flex flex-col gap-4">
                 {filteredDoctors.map((doctor) => (
                   <div
@@ -210,7 +278,6 @@ export default function Doctors() {
                 ))}
               </div>
             ) : (
-              // NORMAL MODE: portrait grid
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
                 {filteredDoctors.map((doctor, index) => (
                   <div
@@ -242,7 +309,7 @@ export default function Doctors() {
           </>
         ) : (
           <div className="text-center py-16 bg-white rounded-xl shadow-md p-12 border border-gray-200 animate-scale-in">
-            <p className="text-lg text-gray-600 mb-2">No doctors found within {maxDistance} km.</p>
+            <p className="text-lg text-gray-600 mb-2">No doctors found{selectedSpecialty ? ` for ${selectedSpecialty}` : ""} within {maxDistance} km.</p>
             <p className="text-sm text-gray-400 mb-6">Try increasing the distance filter or clearing search filters.</p>
             <button
               onClick={() => { setSearchQuery(""); setSelectedSpecialty(""); setSelectedLocation(""); setMaxDistance(500); }}
