@@ -1,4 +1,6 @@
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+// API base URL from environment variable (injected at build time via VITE_API_URL)
+// Defaults to localhost:8080 if not set
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 
@@ -40,7 +42,14 @@ export async function request<T>(endpoint: string, options: RequestOptions = {})
     throw error;
   }
 
-  return response.json() as Promise<T>;
+  const contentType = response.headers.get("content-type");
+  if (contentType?.includes("application/json")) {
+    return response.json() as Promise<T>;
+  }
+  
+  // Handle plain text responses
+  const text = await response.text();
+  return (text ? { message: text } : {}) as unknown as Promise<T>;
 }
 
 export const api = {
