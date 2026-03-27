@@ -19,12 +19,21 @@ interface VisitRequest {
 
 type DayKey = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday";
 const DAYS: DayKey[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const DAY_LABELS: Record<DayKey, string> = {
+  Monday: "Понеделник",
+  Tuesday: "Вторник",
+  Wednesday: "Сряда",
+  Thursday: "Четвъртък",
+  Friday: "Петък",
+  Saturday: "Събота",
+  Sunday: "Неделя",
+};
 
 const INITIAL_REQUESTS: VisitRequest[] = [
-  { id: 1, patientName: "Ivan Ivanov",    address: "Plovdiv",        situation: "High fever and cough for 3 days, temperature 39.5°C.",     lat: 42.1352, lng: 24.7452, status: "pending" },
-  { id: 2, patientName: "Elena Petrova",  address: "ul. Oborishte 15, Sofia",    situation: "Sudden acute lower-back pain, difficulty walking.",         lat: 42.6953, lng: 23.3401, status: "pending" },
-  { id: 3, patientName: "Georgi Angelov", address: "bul. Vitosha 20, Sofia",     situation: "Allergic reaction after starting new medication yesterday.", lat: 42.6912, lng: 23.3198, status: "pending" },
-  { id: 4, patientName: "Maria Nikolova", address: "ul. Graf Ignatiev 5, Sofia", situation: "6-month pediatric checkup.",                                lat: 42.6895, lng: 23.3245, status: "pending" },
+  { id: 1, patientName: "Иван Иванов",    address: "Пловдив",        situation: "Висока температура и кашлица от 3 дни, температура 39.5°C.",     lat: 42.1352, lng: 24.7452, status: "pending" },
+  { id: 2, patientName: "Елена Петрова",  address: "ул. Оборище 15, София",    situation: "Внезапна остра болка в кръста, затруднено ходене.",         lat: 42.6953, lng: 23.3401, status: "pending" },
+  { id: 3, patientName: "Георги Ангелов", address: "бул. Витоша 20, София",     situation: "Алергична реакция след започване на ново лекарство вчера.", lat: 42.6912, lng: 23.3198, status: "pending" },
+  { id: 4, patientName: "Мария Николова", address: "ул. Граф Игнатиев 5, София", situation: "Педиатричен контролен преглед на 6 месеца.",                                lat: 42.6895, lng: 23.3245, status: "pending" },
 ];
 
 const DOCTOR_BASE = { lat: 42.6977, lng: 23.3219 };
@@ -173,7 +182,7 @@ export default function DoctorHome() {
     setMapModal({
       embedUrl: buildEmbedUrl(DOCTOR_BASE, sorted),
       externalUrl: buildExternalUrl(DOCTOR_BASE, sorted),
-      title: `Full Route — ${sorted.length} stop${sorted.length !== 1 ? "s" : ""}`,
+      title: `Пълен маршрут — ${sorted.length} спирк${sorted.length !== 1 ? "и" : "а"}`,
     });
   }, [requests]);
 
@@ -183,7 +192,7 @@ export default function DoctorHome() {
     setMapModal({
       embedUrl: buildSingleEmbedUrl(DOCTOR_BASE, req),
       externalUrl: buildSingleExternalUrl(DOCTOR_BASE, req),
-      title: `Navigate to ${req.patientName}`,
+      title: `Навигация до ${req.patientName}`,
     });
   };
 
@@ -212,7 +221,7 @@ export default function DoctorHome() {
           >
             {schedule[day].active && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
           </button>
-          <p className="text-xs font-bold text-gray-900">{day.slice(0, 3)}</p>
+          <p className="text-xs font-bold text-gray-900">{DAY_LABELS[day].slice(0, 3)}</p>
         </div>
         {editingSchedule && schedule[day].active ? (
           <div className="space-y-1" onClick={(e) => e.stopPropagation()}>
@@ -221,7 +230,7 @@ export default function DoctorHome() {
           </div>
         ) : (
           <p className={`text-[10px] font-medium leading-tight text-center ${schedule[day].active ? "text-[var(--clr-primary)]" : "text-gray-400"}`}>
-            {schedule[day].active ? `${schedule[day].start}–${schedule[day].end}` : "Off"}
+            {schedule[day].active ? `${schedule[day].start}–${schedule[day].end}` : "Почивка"}
           </p>
         )}
       </div>
@@ -240,9 +249,9 @@ export default function DoctorHome() {
           {/* Schedule */}
           <section className="em-card">
             <div className="flex justify-between items-center mb-4">
-              <h1 className="em-heading" style={{ marginBottom: 0 }}>Weekly Schedule</h1>
+              <h1 className="em-heading" style={{ marginBottom: 0 }}>Седмичен график</h1>
               <button onClick={() => setEditingSchedule(!editingSchedule)} className="em-btn-primary" style={{ padding: "10px 20px", fontSize: "16px" }}>
-                {editingSchedule ? "Save" : "Edit"}
+                {editingSchedule ? "Запази" : "Редактирай"}
               </button>
             </div>
             <div className="divide-y divide-gray-100">
@@ -255,7 +264,7 @@ export default function DoctorHome() {
                   >
                     {schedule[day].active && <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
                   </button>
-                  <span className={`em-body w-36 font-semibold ${schedule[day].active ? "" : "text-gray-400"}`} style={{ marginBottom: 0 }}>{day}</span>
+                  <span className={`em-body w-36 font-semibold ${schedule[day].active ? "" : "text-gray-400"}`} style={{ marginBottom: 0 }}>{DAY_LABELS[day]}</span>
                   {editingSchedule && schedule[day].active ? (
                     <div className="flex items-center gap-2 ml-auto" onClick={(e) => e.stopPropagation()}>
                       <input type="time" value={schedule[day].start} onChange={(e) => updateTime(day, "start", e.target.value)} className="em-input" style={{ padding: "8px 12px", fontSize: "16px", width: "auto" }} />
@@ -264,7 +273,7 @@ export default function DoctorHome() {
                     </div>
                   ) : (
                     <span className={`em-body ml-auto font-medium ${schedule[day].active ? "text-(--clr-primary)" : "text-gray-300"}`} style={{ marginBottom: 0 }}>
-                      {schedule[day].active ? `${schedule[day].start} – ${schedule[day].end}` : "Off"}
+                      {schedule[day].active ? `${schedule[day].start} – ${schedule[day].end}` : "Почивка"}
                     </span>
                   )}
                 </div>
@@ -275,10 +284,10 @@ export default function DoctorHome() {
           {/* Visit Queue */}
           <section className="em-card">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="em-subheading" style={{ marginBottom: 0 }}>Visit Queue ({pending.length})</h2>
+              <h2 className="em-subheading" style={{ marginBottom: 0 }}>Опашка за посещения ({pending.length})</h2>
               {pending.length > 0 && (
                 <button onClick={handleStartRoute} className="em-btn-primary" style={{ padding: "10px 20px", fontSize: "16px" }}>
-                  {routeOptimized ? "Restart Route" : "Start Route"}
+                  {routeOptimized ? "Рестартирай маршрута" : "Старт на маршрута"}
                 </button>
               )}
             </div>
@@ -294,7 +303,7 @@ export default function DoctorHome() {
                       <span className="em-body font-bold" style={{ marginBottom: 0 }}>{req.patientName}</span>
                       {req.status === "done"
                         ? <svg className="w-6 h-6 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                        : req.distance ? <span className="em-body font-bold text-(--clr-primary)" style={{ marginBottom: 0 }}>{req.distance.toFixed(1)} km</span> : null}
+                        : req.distance ? <span className="em-body font-bold text-(--clr-primary)" style={{ marginBottom: 0 }}>{req.distance.toFixed(1)} км</span> : null}
                     </div>
                     <p className="em-body text-gray-500 line-clamp-1" style={{ marginBottom: 0 }}>{req.address}</p>
                   </div>
@@ -304,14 +313,14 @@ export default function DoctorHome() {
                         onClick={() => handleOpenPatientMap(req, idx)}
                         className="em-btn-primary" style={{ padding: "8px 16px", fontSize: "14px" }}
                       >
-                        Navigate
+                        Навигация
                       </button>
                       {activeIndex === idx && (
                         <button
                           onClick={handleMarkDone}
                           className="em-btn-primary" style={{ padding: "8px 16px", fontSize: "14px", background: "var(--clr-accent-light)", color: "var(--clr-primary-hover)" }}
                         >
-                          Done
+                          Завършено
                         </button>
                       )}
                     </div>
@@ -321,7 +330,7 @@ export default function DoctorHome() {
             </div>
 
             {done.length > 0 && (
-              <p className="em-body text-green-600 font-bold mt-4" style={{ marginBottom: 0 }}>{done.length} visit{done.length !== 1 ? "s" : ""} completed today</p>
+              <p className="em-body text-green-600 font-bold mt-4" style={{ marginBottom: 0 }}>{done.length} посещени{done.length !== 1 ? "я" : "е"} завършен{done.length !== 1 ? "и" : "о"} днес</p>
             )}
           </section>
 
@@ -347,8 +356,8 @@ export default function DoctorHome() {
 
       <div className="max-w-5xl mx-auto px-4 py-12">
         <div className="mb-10 pl-1">
-          <h1 className="text-3xl font-bold text-gray-900 border-b-2 border-gray-100 pb-2 mb-1">Doctor Dashboard</h1>
-          <p className="text-xs text-gray-400 font-medium tracking-widest opacity-60">Manage your schedule and visit queue</p>
+          <h1 className="text-3xl font-bold text-gray-900 border-b-2 border-gray-100 pb-2 mb-1">Лекарски панел</h1>
+          <p className="text-xs text-gray-400 font-medium tracking-widest opacity-60">Управлявайте графика си и опашката за посещения</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -357,14 +366,14 @@ export default function DoctorHome() {
           <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col lg:col-span-2">
             <div className="flex justify-between items-center mb-4">
               <div>
-                <p className="text-gray-500 text-xs uppercase tracking-wide mb-1 font-bold">Availability</p>
-                <h2 className="text-xl font-bold text-gray-900">Weekly Schedule</h2>
+                <p className="text-gray-500 text-xs uppercase tracking-wide mb-1 font-bold">Наличност</p>
+                <h2 className="text-xl font-bold text-gray-900">Седмичен график</h2>
               </div>
               <button
                 onClick={() => setEditingSchedule(!editingSchedule)}
                 className="bg-[var(--clr-primary)] text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-[var(--clr-primary-hover)] transition-colors duration-200"
               >
-                {editingSchedule ? "Save Schedule" : "Edit Schedule"}
+                {editingSchedule ? "Запази графика" : "Редактирай графика"}
               </button>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
@@ -374,29 +383,29 @@ export default function DoctorHome() {
 
           {/* Queue summary */}
           <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col">
-            <p className="text-gray-500 text-xs uppercase tracking-wide mb-2 font-bold">Today's Visits</p>
+            <p className="text-gray-500 text-xs uppercase tracking-wide mb-2 font-bold">Днешни посещения</p>
             <h2 className="text-xl font-bold text-gray-900 mb-2">
-              {pending.length} Pending Request{pending.length !== 1 ? "s" : ""}
+              {pending.length} чакащ{pending.length !== 1 ? "и" : "а"} заявк{pending.length !== 1 ? "и" : "а"}
             </h2>
             <p className="text-sm text-gray-600 mb-4 flex-grow">
-              {done.length > 0 ? `${done.length} completed today. ` : ""}
+              {done.length > 0 ? `${done.length} завършени днес. ` : ""}
               {pending.length > 0
-                ? "Start Route to get the optimized multi-stop route in Google Maps."
-                : "All visits complete for today!"}
+                ? "Натиснете Старт на маршрута за оптимизиран многоетапен маршрут в Google Maps."
+                : "Всички посещения за днес са завършени!"}
             </p>
             {pending.length > 0 && (
               <button
                 onClick={handleStartRoute}
                 className="block w-full bg-[var(--clr-primary)] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[var(--clr-primary-hover)] transition-colors duration-200 text-center text-sm"
               >
-                {routeOptimized ? "Restart Route" : "Start Route"}
+                {routeOptimized ? "Рестартирай маршрута" : "Старт на маршрута"}
               </button>
             )}
           </div>
 
           {/* Active nav card */}
           <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col">
-            <p className="text-gray-500 text-xs uppercase tracking-wide mb-2 font-bold">Navigation</p>
+            <p className="text-gray-500 text-xs uppercase tracking-wide mb-2 font-bold">Навигация</p>
             {activeReq ? (
               <>
                 <h2 className="text-xl font-bold text-gray-900 mb-1">{activeReq.patientName}</h2>
@@ -407,21 +416,21 @@ export default function DoctorHome() {
                     onClick={() => handleOpenPatientMap(activeReq, activeIndex!)}
                     className="flex-1 bg-[var(--clr-primary)] text-white px-4 py-3 rounded-lg font-semibold hover:bg-[var(--clr-primary-hover)] transition-colors duration-200 text-sm"
                   >
-                    Open Map
+                    Отвори карта
                   </button>
                   <button
                     onClick={handleMarkDone}
                     className="flex-1 bg-(--clr-accent-light) text-(--clr-primary-hover) px-4 py-3 rounded-lg font-semibold hover:opacity-80 transition-colors duration-200 text-sm"
                   >
-                    Mark Done
+                    Маркирай като завършено
                   </button>
                 </div>
               </>
             ) : (
               <>
-                <h2 className="text-xl font-bold text-gray-900 mb-2">No Active Stop</h2>
+                <h2 className="text-xl font-bold text-gray-900 mb-2">Няма активна спирка</h2>
                 <p className="text-sm text-gray-600 flex-grow">
-                  Press <strong>Start Route</strong> to optimize and begin, or click any visit below.
+                  Натиснете <strong>Старт на маршрута</strong>, за да оптимизирате и започнете, или изберете посещение отдолу.
                 </p>
               </>
             )}
@@ -431,9 +440,9 @@ export default function DoctorHome() {
         {/* Queue list */}
         <div className="bg-white border border-gray-200 p-8 rounded-lg shadow-sm">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-700 uppercase tracking-wide">Visit Queue</h2>
+            <h2 className="text-lg font-semibold text-gray-700 uppercase tracking-wide">Опашка за посещения</h2>
             {routeOptimized && (
-              <span className="text-xs font-bold text-green-700 bg-green-50 border border-green-200 px-3 py-1 rounded-lg">Route optimized</span>
+              <span className="text-xs font-bold text-green-700 bg-green-50 border border-green-200 px-3 py-1 rounded-lg">Маршрутът е оптимизиран</span>
             )}
           </div>
           <div className="space-y-3">
@@ -466,7 +475,7 @@ export default function DoctorHome() {
 
                 {/* Distance badge */}
                 {req.distance !== undefined && (
-                  <span className="text-xs font-bold text-gray-400 shrink-0">{req.distance.toFixed(1)} km</span>
+                  <span className="text-xs font-bold text-gray-400 shrink-0">{req.distance.toFixed(1)} км</span>
                 )}
 
                 {/* Actions */}
@@ -476,14 +485,14 @@ export default function DoctorHome() {
                       onClick={() => handleOpenPatientMap(req, idx)}
                       className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[var(--clr-primary)] text-white hover:bg-[var(--clr-primary-hover)] transition-colors"
                     >
-                      Navigate
+                      Навигация
                     </button>
                     {activeIndex === idx && (
                       <button
                         onClick={handleMarkDone}
                         className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-(--clr-accent-light) text-(--clr-primary-hover) hover:opacity-80 transition-colors"
                       >
-                        Done
+                        Завършено
                       </button>
                     )}
                   </div>
