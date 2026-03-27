@@ -44,4 +44,4 @@ services:
       - API_URL=${API_URL}
 
 volumes:
-  postgres_data:
+  postgres_data:
