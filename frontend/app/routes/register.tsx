@@ -17,6 +17,123 @@ export function meta({ }: Route.MetaArgs) {
   ];
 }
 
+// ── Icons (defined outside to avoid re-creation) ──────────────────────────────
+const GlobeIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+  </svg>
+);
+
+const PinIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+  </svg>
+);
+
+// ── LocationField moved OUTSIDE Register so it never remounts on each render ──
+interface LocationFieldProps {
+  inputCls: string;
+  mapHeight: string;
+  showMap: boolean;
+  locating: boolean;
+  addressLocation: string;
+  selectedLocation: { lat: number; lng: number; address: string } | null;
+  onAddressChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onAutoLocate: () => void;
+  onOpenMap: () => void;
+  onClearMap: () => void;
+  onConfirmMap: () => void;
+  onLocationSelect: (lat: number, lng: number, address: string) => void;
+}
+
+function LocationField({
+  inputCls,
+  mapHeight,
+  showMap,
+  locating,
+  addressLocation,
+  selectedLocation,
+  onAddressChange,
+  onAutoLocate,
+  onOpenMap,
+  onClearMap,
+  onConfirmMap,
+  onLocationSelect,
+}: LocationFieldProps) {
+  return (
+    <>
+      {!showMap ? (
+        <div className="flex items-center border-2 border-[var(--clr-accent)] rounded-lg overflow-hidden focus-within:border-[var(--clr-accent-muted)]">
+          <input
+            type="text"
+            name="addressLocation"
+            id="reg-address"
+            value={addressLocation}
+            onChange={onAddressChange}
+            placeholder="City, District or use buttons →"
+            className={`${inputCls} border-0 focus:outline-none focus:ring-0 bg-white`}
+            required
+          />
+          <button
+            type="button"
+            onClick={onAutoLocate}
+            disabled={locating}
+            title="Use my current location"
+            className="shrink-0 px-3 py-2 text-gray-500 hover:text-[var(--clr-primary)] border-l border-[var(--clr-accent)] transition-colors disabled:opacity-50"
+          >
+            {locating ? (
+              <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            ) : <PinIcon />}
+          </button>
+          <button
+            type="button"
+            onClick={onOpenMap}
+            title="Pick on map"
+            className="shrink-0 px-3 py-2 text-gray-500 hover:text-[var(--clr-primary)] border-l border-[var(--clr-accent)] transition-colors"
+          >
+            <GlobeIcon />
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <Suspense fallback={
+            <div className={`${mapHeight} bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-sm border border-dashed border-gray-300`}>
+              Loading map...
+            </div>
+          }>
+            <MapComponent selectedLocation={selectedLocation} onLocationSelect={onLocationSelect} />
+          </Suspense>
+          {selectedLocation && (
+            <p className="text-xs text-green-700 font-medium bg-green-50 px-3 py-2 rounded-lg border border-green-200">
+              ✓ {selectedLocation.address}
+            </p>
+          )}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={onClearMap}
+              className="flex-1 border border-gray-300 text-gray-600 py-2 rounded-lg text-xs font-medium hover:bg-gray-50 transition-colors"
+            >
+              Clear
+            </button>
+            <button
+              type="button"
+              onClick={onConfirmMap}
+              className="flex-1 bg-[var(--clr-primary)] text-white py-2 rounded-lg text-xs font-bold hover:bg-[var(--clr-primary-hover)] transition-colors"
+            >
+              Confirm Location
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ── Main component ─────────────────────────────────────────────────────────────
 export default function Register() {
   const { isEasyMode } = useEasyMode();
   const { register } = useAuth();
@@ -44,7 +161,6 @@ export default function Register() {
   const [locating, setLocating] = useState(false);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
 
-  // Redirect away if already logged in
   const { isLoading: authLoading } = useRoleGuard("unauthenticated");
 
   const countries = [
@@ -64,6 +180,12 @@ export default function Register() {
     if (name === "egn") {
       setEgnError(value && !isValidEGN(value) ? "Invalid EGN format. Please check the 10 digits." : "");
     }
+  };
+
+  // Dedicated handler for the address input to keep it stable
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    setFormData((prev) => ({ ...prev, addressLocation: value }));
   };
 
   const handleLocationSelect = (lat: number, lng: number, address: string) => {
@@ -123,7 +245,6 @@ export default function Register() {
         email: formData.email,
         password: formData.password,
       };
-      // Pass the picked location so it seeds doctor proximity across the app
       await register(backendData, selectedLocation ?? undefined);
       setIsSubmitted(true);
     } catch (err: any) {
@@ -133,73 +254,19 @@ export default function Register() {
     }
   };
 
-  const GlobeIcon = () => (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-    </svg>
-  );
-
-  const PinIcon = () => (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
-  );
-
-  function LocationField({ inputCls, mapHeight }: { inputCls: string; mapHeight: string }) {
-    return (
-      <>
-        {!showMap ? (
-          <div className="flex items-center border-2 border-[var(--clr-accent)] rounded-lg overflow-hidden focus-within:border-[var(--clr-accent-muted)]">
-            <input
-              type="text"
-              name="addressLocation"
-              id="reg-address"
-              value={formData.addressLocation}
-              onChange={handleChange}
-              placeholder="City, District or use buttons →"
-              className={`${inputCls} border-0 focus:outline-none focus:ring-0 bg-white`}
-              required
-            />
-            <button
-              type="button"
-              onClick={handleAutoLocate}
-              disabled={locating}
-              title="Use my current location"
-              className="shrink-0 px-3 py-2 text-gray-500 hover:text-[var(--clr-primary)] border-l border-[var(--clr-accent)] transition-colors disabled:opacity-50"
-            >
-              {locating ? (
-                <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              ) : <PinIcon />}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowMap(true)}
-              title="Pick on map"
-              className="shrink-0 px-3 py-2 text-gray-500 hover:text-[var(--clr-primary)] border-l border-[var(--clr-accent)] transition-colors"
-            >
-              <GlobeIcon />
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <Suspense fallback={<div className={`${mapHeight} bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-sm border border-dashed border-gray-300`}>Loading map...</div>}>
-              <MapComponent selectedLocation={selectedLocation} onLocationSelect={handleLocationSelect} />
-            </Suspense>
-            {selectedLocation && (
-              <p className="text-xs text-green-700 font-medium bg-green-50 px-3 py-2 rounded-lg border border-green-200">✓ {selectedLocation.address}</p>
-            )}
-            <div className="flex gap-2">
-              <button type="button" onClick={handleClearMap} className="flex-1 border border-gray-300 text-gray-600 py-2 rounded-lg text-xs font-medium hover:bg-gray-50 transition-colors">Clear</button>
-              <button type="button" onClick={() => setShowMap(false)} className="flex-1 bg-[var(--clr-primary)] text-white py-2 rounded-lg text-xs font-bold hover:bg-[var(--clr-primary-hover)] transition-colors">Confirm Location</button>
-            </div>
-          </div>
-        )}
-      </>
-    );
-  }
+  // Shared props for LocationField
+  const locationFieldProps = {
+    showMap,
+    locating,
+    addressLocation: formData.addressLocation,
+    selectedLocation,
+    onAddressChange: handleAddressChange,
+    onAutoLocate: handleAutoLocate,
+    onOpenMap: () => setShowMap(true),
+    onClearMap: handleClearMap,
+    onConfirmMap: () => setShowMap(false),
+    onLocationSelect: handleLocationSelect,
+  };
 
   if (authLoading) return null;
 
@@ -244,8 +311,21 @@ export default function Register() {
                   </div>
                   <div>
                     <label htmlFor="em-egn" className="em-label">EGN (Bulgarian ID Number)</label>
-                    <input id="em-egn" type="text" name="egn" value={formData.egn} onChange={handleChange} placeholder="1234567890" maxLength={10} className={`em-input ${egnError ? "border-red-500 bg-red-50" : ""}`} required />
-                    {egnError ? <p className="text-red-600 font-bold mt-1" style={{ fontSize: "18px" }}>{egnError}</p> : <p className="em-body text-gray-500 mt-1" style={{ fontSize: "16px" }}>10-digit Bulgarian national ID number</p>}
+                    <input
+                      id="em-egn"
+                      type="text"
+                      name="egn"
+                      value={formData.egn}
+                      onChange={handleChange}
+                      placeholder="1234567890"
+                      maxLength={10}
+                      className={`em-input ${egnError ? "border-red-500 bg-red-50" : ""}`}
+                      required
+                    />
+                    {egnError
+                      ? <p className="text-red-600 font-bold mt-1" style={{ fontSize: "18px" }}>{egnError}</p>
+                      : <p className="em-body text-gray-500 mt-1" style={{ fontSize: "16px" }}>10-digit Bulgarian national ID number</p>
+                    }
                   </div>
                   <div>
                     <label className="em-label">Phone Number</label>
@@ -258,7 +338,7 @@ export default function Register() {
                   </div>
                   <div>
                     <label htmlFor="reg-address" className="em-label">Address / Location</label>
-                    <LocationField inputCls="em-input flex-1" mapHeight="h-64" />
+                    <LocationField {...locationFieldProps} inputCls="em-input flex-1" mapHeight="h-64" />
                   </div>
                   <div>
                     <label htmlFor="em-password" className="em-label">Password</label>
@@ -271,7 +351,11 @@ export default function Register() {
                   <div className="em-full-width">
                     <label className="flex items-center gap-3">
                       <input type="checkbox" name="acceptTerms" checked={formData.acceptTerms} onChange={handleChange} className="w-5 h-5 rounded border-gray-300" required />
-                      <span className="em-body">I agree to the{" "}<button type="button" onClick={() => setIsTermsModalOpen(true)} className="text-(--clr-primary) hover:text-(--clr-primary-hover) font-bold underline">terms and conditions</button></span>
+                      <span className="em-body">I agree to the{" "}
+                        <button type="button" onClick={() => setIsTermsModalOpen(true)} className="text-(--clr-primary) hover:text-(--clr-primary-hover) font-bold underline">
+                          terms and conditions
+                        </button>
+                      </span>
                     </label>
                   </div>
                   <div className="em-full-width">
@@ -280,14 +364,19 @@ export default function Register() {
                     </button>
                   </div>
                 </form>
-                <p className="em-body mt-6">Already have an account?{" "}<Link to="/login" className="text-(--clr-primary) hover:text-(--clr-primary-hover) font-bold underline">Sign in here</Link></p>
+                <p className="em-body mt-6">
+                  Already have an account?{" "}
+                  <Link to="/login" className="text-(--clr-primary) hover:text-(--clr-primary-hover) font-bold underline">Sign in here</Link>
+                </p>
               </>
             )}
           </section>
         </div>
         <TermsModal isOpen={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)} />
         <footer className="bg-gray-100 border-t border-gray-200 mt-20 animate-fade-in">
-          <div className="max-w-4xl mx-auto px-4 py-8 text-center text-black"><p>&copy; 2025 InReach. Bringing healthcare to remote areas.</p></div>
+          <div className="max-w-4xl mx-auto px-4 py-8 text-center text-black">
+            <p>&copy; 2025 InReach. Bringing healthcare to remote areas.</p>
+          </div>
         </footer>
       </div>
     );
@@ -344,12 +433,24 @@ export default function Register() {
                   </div>
                   <div className="animate-slide-in-up [animation-delay:400ms]">
                     <label className="block text-sm font-medium text-gray-700 mb-1">EGN (Bulgarian ID Number)</label>
-                    <input type="text" name="egn" value={formData.egn} onChange={handleChange} placeholder="1234567890" maxLength={10} className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-(--clr-accent) ${egnError ? "border-red-500 bg-red-50" : "border-gray-300"}`} required />
-                    {egnError ? <p className="text-xs text-red-600 mt-1 font-medium">{egnError}</p> : <p className="text-xs text-gray-500 mt-1">10-digit Bulgarian national ID number</p>}
+                    <input
+                      type="text"
+                      name="egn"
+                      value={formData.egn}
+                      onChange={handleChange}
+                      placeholder="1234567890"
+                      maxLength={10}
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-(--clr-accent) ${egnError ? "border-red-500 bg-red-50" : "border-gray-300"}`}
+                      required
+                    />
+                    {egnError
+                      ? <p className="text-xs text-red-600 mt-1 font-medium">{egnError}</p>
+                      : <p className="text-xs text-gray-500 mt-1">10-digit Bulgarian national ID number</p>
+                    }
                   </div>
                   <div className="animate-slide-in-up [animation-delay:500ms]">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Address / Location</label>
-                    <LocationField inputCls="flex-1 px-4 py-2 text-sm" mapHeight="h-48" />
+                    <LocationField {...locationFieldProps} inputCls="flex-1 px-4 py-2 text-sm" mapHeight="h-48" />
                   </div>
                   <div className="animate-slide-in-up [animation-delay:600ms]">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
@@ -361,20 +462,34 @@ export default function Register() {
                   </div>
                   <label className="flex items-start animate-slide-in-up [animation-delay:800ms]">
                     <input type="checkbox" name="acceptTerms" checked={formData.acceptTerms} onChange={handleChange} className="w-4 h-4 rounded border-gray-300 mt-0.5" required />
-                    <span className="ml-2 text-sm text-gray-700">I agree to the{" "}<button type="button" onClick={() => setIsTermsModalOpen(true)} className="text-(--clr-primary) hover:text-(--clr-primary-hover) font-semibold underline transition-all duration-200">terms and conditions</button></span>
+                    <span className="ml-2 text-sm text-gray-700">
+                      I agree to the{" "}
+                      <button type="button" onClick={() => setIsTermsModalOpen(true)} className="text-(--clr-primary) hover:text-(--clr-primary-hover) font-semibold underline transition-all duration-200">
+                        terms and conditions
+                      </button>
+                    </span>
                   </label>
-                  <button type="submit" className="w-full bg-(--clr-primary) text-white py-2 rounded-lg font-bold hover:bg-(--clr-primary-hover) hover:scale-105 active:scale-95 transition-all duration-200 mt-2 disabled:opacity-50" disabled={isLoading}>
+                  <button
+                    type="submit"
+                    className="w-full bg-(--clr-primary) text-white py-2 rounded-lg font-bold hover:bg-(--clr-primary-hover) hover:scale-105 active:scale-95 transition-all duration-200 mt-2 disabled:opacity-50"
+                    disabled={isLoading}
+                  >
                     {isLoading ? "Creating Account..." : "Create Account"}
                   </button>
                 </form>
-                <p className="text-center text-gray-600 mt-6">Already have an account?{" "}<Link to="/login" className="text-(--clr-primary) hover:text-(--clr-primary-hover) font-bold hover:underline transition-all duration-200">Sign in here</Link></p>
+                <p className="text-center text-gray-600 mt-6">
+                  Already have an account?{" "}
+                  <Link to="/login" className="text-(--clr-primary) hover:text-(--clr-primary-hover) font-bold hover:underline transition-all duration-200">Sign in here</Link>
+                </p>
               </>
             )}
           </div>
         </div>
       </div>
       <footer className="bg-gray-100 border-t border-gray-200 mt-20 animate-fade-in">
-        <div className="max-w-4xl mx-auto px-4 py-8 text-center text-black"><p>&copy; 2025 InReach. Bringing healthcare to remote areas.</p></div>
+        <div className="max-w-4xl mx-auto px-4 py-8 text-center text-black">
+          <p>&copy; 2025 InReach. Bringing healthcare to remote areas.</p>
+        </div>
       </footer>
       <TermsModal isOpen={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)} />
     </div>
