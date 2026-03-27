@@ -10,6 +10,11 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: ./backend
@@ -17,24 +22,38 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
-      - SPRING_PROFILES_ACTIVE=production
-      - LOG_LEVEL_SPRING_SECURITY=INFO
-      - SERVER_PORT=8080
-      - DB_DRIVER=${DB_DRIVER}
+      - SERVER_PORT=${SERVER_PORT}
+      - LOG_LEVEL_SPRING_SECURITY=${LOG_LEVEL_SPRING_SECURITY}
       - DB_URL=${DB_URL}
+      - DB_DRIVER=${DB_DRIVER}
       - DB_USERNAME=${POSTGRES_USER}
       - DB_PASSWORD=${POSTGRES_PASSWORD}
       - JPA_SHOW_SQL=${JPA_SHOW_SQL}
-      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=${DB_DRIVER}
-      - SPRING_DATASOURCE_URL=${DB_URL}
-      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
-      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=${SPRING_JPA_HIBERNATE_DDL_AUTO}
-
+      - JPA_HIBERNATE_DDL_AUTO=${JPA_HIBERNATE_DDL_AUTO}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION_MS=${JWT_EXPIRATION_MS}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - ADMIN_EGN=${ADMIN_EGN}
+      - ADMIN_FIRST_NAME=${ADMIN_FIRST_NAME}
+      - ADMIN_LAST_NAME=${ADMIN_LAST_NAME}
+      - ADMIN_ADDRESS=${ADMIN_ADDRESS}
+      - ADMIN_TELEPHONE=${ADMIN_TELEPHONE}
+      - ADMIN_STATUS=${ADMIN_STATUS}
+      - SPRING_MAIL_HOST=${SPRING_MAIL_HOST}
+      - SPRING_MAIL_PORT=${SPRING_MAIL_PORT}
+      - SPRING_MAIL_USERNAME=${SPRING_MAIL_USERNAME}
+      - SPRING_MAIL_PASSWORD=${SPRING_MAIL_PASSWORD}
+      - SPRING_MAIL_FROM=${SPRING_MAIL_FROM}
+  
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        - VITE_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY}
     container_name: inreach-frontend
     ports:
       - "3000:3000"
@@ -42,6 +61,5 @@ services:
       - backend
     environment:
       - API_URL=${API_URL}
-
 volumes:
   postgres_data:

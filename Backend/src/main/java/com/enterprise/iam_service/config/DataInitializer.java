@@ -5,6 +5,7 @@ import com.enterprise.iam_service.model.User;
 import com.enterprise.iam_service.repository.RoleRepository;
 import com.enterprise.iam_service.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -20,11 +21,35 @@ public class DataInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Value("${ADMIN_EMAIL}")
+    private String adminEmail;
+
+    @Value("${ADMIN_PASSWORD}")
+    private String adminPassword;
+
+    @Value("${ADMIN_EGN}")
+    private String adminEgn;
+
+    @Value("${ADMIN_FIRST_NAME}")
+    private String adminFirstName;
+
+    @Value("${ADMIN_LAST_NAME}")
+    private String adminLastName;
+
+    @Value("${ADMIN_ADDRESS}")
+    private String adminAddress;
+
+    @Value("${ADMIN_TELEPHONE}")
+    private String adminTelephone;
+
+    @Value("${ADMIN_STATUS}")
+    private String adminStatus;
+
     @Override
     public void run(String... args) {
         // * Logic check: Prevent duplicate roles by verifying if "ADMIN" already exists in the DB.
         if (roleRepository.findByName("Admin").isEmpty()) {
-            
+
             // * Initialize the system's core Administrative Role.
             Role adminRole = new Role();
             adminRole.setName("Admin");
@@ -47,28 +72,27 @@ public class DataInitializer implements CommandLineRunner {
             roleRepository.save(driverRole);
 
             // * Seed the initial system administrator if they don't exist.
-            if (userRepository.findByEmail("admin@enterprise.com").isEmpty()) {
-                
-                // ! SECURITY ALERT: Default credentials used for first-time setup. 
+            if (userRepository.findByEmail(adminEmail).isEmpty()) {
+
+                // ! SECURITY ALERT: Default credentials used for first-time setup.
                 // ! Change password immediately after first login.
                 User admin = User.builder()
-                    .egn("0000000000")
-                    .firstName("System")
-                    .lastName("Administrator")
-                    .address("Enterprise HQ")
-                    .telephone("+359000000000")
-                    .email("admin@enterprise.com")
-                    .passwordHash(passwordEncoder.encode("admin123"))
-                    .status("ACTIVE")
+                    .egn(adminEgn)
+                    .firstName(adminFirstName)
+                    .lastName(adminLastName)
+                    .address(adminAddress)
+                    .telephone(adminTelephone)
+                    .email(adminEmail)
+                    .passwordHash(passwordEncoder.encode(adminPassword))
+                    .status(adminStatus)
                     .roles(Set.of(adminRole))
                     .build();
-                
+
                 userRepository.save(admin);
-                
+
                 // * Audit: Log initial setup to the console.
-                System.out.println("Default Admin account created: admin@enterprise.com / admin123");
+                System.out.println("Default Admin account created: " + adminEmail);
             }
         }
-        
     }
 }
