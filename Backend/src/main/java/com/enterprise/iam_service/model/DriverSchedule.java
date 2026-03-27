@@ -2,6 +2,7 @@ package com.enterprise.iam_service.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 // ? @Entity: Defines this class as a JPA entity mapped to the 'pharmacist_schedules' table.
 // ? Extends BaseSchedule for shared scheduling logic (recurring + specific date override pattern).
@@ -16,7 +17,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 public class DriverSchedule extends BaseSchedule {
 
     // ? @ManyToOne: One pharmacist (User) can have many schedule entries.
