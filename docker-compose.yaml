@@ -2,12 +2,14 @@ services:
   db:
     image: postgres:16-alpine
     container_name: inreach-db
+    env_file:
+      - .env
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -19,6 +21,8 @@ services:
   backend:
     build: ./backend
     container_name: inreach-backend
+    env_file:
+      - .env
     ports:
       - "8080:8080"
     depends_on:
@@ -55,6 +59,8 @@ services:
       args:
         - VITE_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY}
     container_name: inreach-frontend
+    env_file:
+      - .env
     ports:
       - "3000:3000"
     depends_on:

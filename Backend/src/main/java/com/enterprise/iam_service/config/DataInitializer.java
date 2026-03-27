@@ -9,10 +9,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+
 import java.util.Set;
 
-// ? @Component ensures this class is picked up by Spring's component scanning.
-// ? CommandLineRunner is an interface used to run a specific block of code once the application context has loaded.
 @Component
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
@@ -47,7 +46,6 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // * Logic check: Prevent duplicate roles by verifying if "ADMIN" already exists in the DB.
         if (roleRepository.findByName("Admin").isEmpty()) {
 
             // * Initialize the system's core Administrative Role.
@@ -61,10 +59,22 @@ public class DataInitializer implements CommandLineRunner {
             patientRole.setDescription("Can submit visit requests and view prescriptions");
             roleRepository.save(patientRole);
 
-            Role doctorRole = new Role();
-            doctorRole.setName("Doctor");
-            doctorRole.setDescription("Can view assigned routes and issue prescriptions");
-            roleRepository.save(doctorRole);
+            Role adminRole  = createRole("Admin",    "Full system access");
+            Role patientRole = createRole("Patient", "Can submit visit requests and view prescriptions");
+            Role doctorRole  = createRole("Doctor",  "Can view assigned routes and issue prescriptions");
+            Role driverRole  = createRole("Driver",  "Can view and complete delivery orders");
+ Role adminRole  = createRole("Admin",    "Full system access");
+66
+            Role patientRole = createRole("Patient", "Can submit visit requests and view prescriptions");
+67
+            Role doctorRole  = createRole("Doctor",  "Can view assigned routes and issue prescriptions");
+68
+            Role driverRole  = createRole("Driver",  "Can view and complete delivery orders");
+69
+​
+ |  | 
+70
+ 
 
             Role driverRole = new Role();
             driverRole.setName("Driver");

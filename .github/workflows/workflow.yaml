@@ -6,11 +6,12 @@ on:
       - main
 
 env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   AWS_REGION: eu-central-1
   ECR_REGISTRY: 787587782604.dkr.ecr.eu-central-1.amazonaws.com
   BACKEND_REPO: hacktues12-backend
   FRONTEND_REPO: hacktues12-frontend
-  BACKEND_DOCKERFILE_PATH: ./backend
+  BACKEND_DOCKERFILE_PATH: ./Backend
   FRONTEND_DOCKERFILE_PATH: ./frontend
 
 jobs:
@@ -22,7 +23,7 @@ jobs:
       frontend: ${{ steps.changes.outputs.frontend }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -32,11 +33,9 @@ jobs:
         with:
           filters: |
             backend:
-              - 'backend/**'
-              - 'backend/Dockerfile'
+              - 'Backend/**'
             frontend:
               - 'frontend/**'
-              - 'frontend/Dockerfile'
 
   build-backend:
     name: Build & Push Spring Boot
@@ -48,7 +47,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -101,7 +100,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
