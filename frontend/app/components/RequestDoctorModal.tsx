@@ -72,8 +72,8 @@ export default function RequestDoctorModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/25 backdrop-blur-[2px] p-4">
-      <div className="w-full max-w-3xl max-h-[90vh] rounded-2xl border border-slate-200/80 bg-white/95 shadow-[0_24px_60px_-20px_rgba(15,23,42,0.45)] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/25 backdrop-blur-[2px] p-4" onClick={onClose}>
+      <div className="w-full max-w-3xl max-h-[90vh] rounded-2xl border border-slate-200/80 bg-white/95 shadow-[0_24px_60px_-20px_rgba(15,23,42,0.45)] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="sticky top-0 bg-white/95 border-b border-gray-200 p-6 flex justify-between items-center backdrop-blur-sm">
           <h2 className="text-2xl font-bold text-gray-900">Request Practitioner</h2>
           <button

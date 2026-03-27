@@ -5,3 +5,6 @@
 # React Router
 /.react-router/
 /build/
+
+#something I want to use but keep to myself
+to-do-list.txt
