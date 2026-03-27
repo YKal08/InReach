@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
+
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -19,6 +21,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@SuperBuilder
 public abstract class BaseSchedule {
 
     @Id
@@ -56,6 +59,10 @@ public abstract class BaseSchedule {
 
     @UpdateTimestamp
     protected LocalDateTime updatedAt;
+
+    @Column(name = "active")
+    @Builder.Default
+    protected Boolean active = true;
 
     // * Convenience method for the service layer to check availability without null checks scattered everywhere.
     public boolean isWorkingDay() {
