@@ -12,8 +12,11 @@
     "@react-router/node": "7.13.2",
     "@react-router/serve": "7.13.2",
     "isbot": "^5.1.36",
+    "leaflet": "^1.9.4",
+    "leaflet-control-geocoder": "^3.3.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "react-leaflet": "^5.0.0",
     "react-router": "7.13.2"
   },
   "devDependencies": {

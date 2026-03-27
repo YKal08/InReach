@@ -6,7 +6,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 import java.util.HashSet;
-import java.util.UUID;
 import java.util.Set;
 
 // ? @Entity: Defines this class as a JPA entity mapped to the database.
@@ -19,10 +18,20 @@ import java.util.Set;
 @Builder
 public class User {
 
-    // * ID: Uses UUID instead of Long for better security and scalability in distributed systems.
+    // * ID: Uses EGN as the primary key.
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @Column(nullable = false, unique = true)
+    private String egn;
+
+    @Column(nullable = false)
+    private String firstName;
+
+    @Column(nullable = false)
+    private String lastName;
+
+    private String address;
+
+    private String telephone;
 
     // ! SECURITY: unique=true prevents duplicate accounts with the same email.
     @Column(unique = true, nullable = false)
