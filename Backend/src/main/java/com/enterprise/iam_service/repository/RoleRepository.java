@@ -13,4 +13,8 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
     // * Query Method: Automatically generates the SQL to look up roles like "ADMIN" or "USER" by name.
     // ? Optional<Role>: Prevents NullPointerExceptions by wrapping the result in a container that might be empty.
     Optional<Role> findByName(String name);
+
+    Optional<Role> findByNameIgnoreCase(String name);
+
+    boolean existsByNameIgnoreCase(String name);
 }
