@@ -5,6 +5,8 @@ import com.enterprise.iam_service.dto.VisitRequestResponse;
 import com.enterprise.iam_service.model.Role;
 import com.enterprise.iam_service.model.User;
 import com.enterprise.iam_service.model.VisitRequest;
+import com.enterprise.iam_service.repository.DoctorScheduleRepository;
+import com.enterprise.iam_service.repository.DriverScheduleRepository;
 import com.enterprise.iam_service.repository.RoleRepository;
 import com.enterprise.iam_service.repository.UserRepository;
 import com.enterprise.iam_service.repository.VisitRequestRepository;
@@ -14,7 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
@@ -27,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 class VisitRequestServiceIntegrationTest {
 
     @Autowired
@@ -42,6 +48,12 @@ class VisitRequestServiceIntegrationTest {
     private RoleRepository roleRepository;
 
     @Autowired
+    private DoctorScheduleRepository doctorScheduleRepository;
+
+    @Autowired
+    private DriverScheduleRepository driverScheduleRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     private static final String EMAIL = "patient@enterprise.com";
@@ -49,8 +61,16 @@ class VisitRequestServiceIntegrationTest {
 
     @BeforeEach
     void setupData() {
+        // Delete in correct order to avoid foreign key violations
         visitRequestRepository.deleteAll();
+        doctorScheduleRepository.deleteAll();
+        driverScheduleRepository.deleteAll();
         userRepository.deleteAll();
+        roleRepository.deleteAll();
+        roleRepository.flush();
+        userRepository.flush();
+        driverScheduleRepository.flush();
+        doctorScheduleRepository.flush();
 
         Role patientRole = roleRepository.findByName("Patient")
                 .orElseGet(() -> roleRepository.save(Role.builder().name("Patient").description("Patient role").build()));
@@ -87,6 +107,8 @@ class VisitRequestServiceIntegrationTest {
     }
 
     @Test
+    @WithMockUser(username = "patient@enterprise.com")
+    @Transactional
     void createAndGetMyRequests_shouldPersistAndReturnRequest() {
         CreateVisitRequestRequest request = new CreateVisitRequestRequest("Sofia Center", "GP", "Need review");
 
@@ -103,6 +125,8 @@ class VisitRequestServiceIntegrationTest {
     }
 
     @Test
+    @WithMockUser(username = "patient@enterprise.com")
+    @Transactional
     void cancel_shouldUpdateVisitRequestStatusInDatabase() {
         VisitRequestResponse created = visitRequestService.create(
                 EMAIL,
