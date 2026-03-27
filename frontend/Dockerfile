@@ -4,6 +4,11 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
+
+# Build-time env vars that Vite needs to bundle
+ARG GOOGLE_MAPS_API_KEY
+ENV GOOGLE_MAPS_API_KEY=$GOOGLE_MAPS_API_KEY
+
 RUN ./node_modules/.bin/react-router build
 
 # Stage 2: Production

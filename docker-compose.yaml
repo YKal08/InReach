@@ -29,23 +29,35 @@ services:
       db:
         condition: service_healthy
     environment:
-      SERVER_PORT: 8080
-      LOG_LEVEL_SPRING_SECURITY: INFO
-      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
-      DB_USERNAME: ${POSTGRES_USER}
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
-      DB_DRIVER: org.postgresql.Driver
-      JPA_HIBERNATE_DDL_AUTO: update
-      JPA_SHOW_SQL: false
-      JPA_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-3600000}
-      ADMIN_EMAIL: ${ADMIN_EMAIL}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-      ADMIN_EGN: ${ADMIN_EGN}
-
+      - SERVER_PORT=${SERVER_PORT}
+      - LOG_LEVEL_SPRING_SECURITY=${LOG_LEVEL_SPRING_SECURITY}
+      - DB_URL=${DB_URL}
+      - DB_DRIVER=${DB_DRIVER}
+      - DB_USERNAME=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - JPA_SHOW_SQL=${JPA_SHOW_SQL}
+      - JPA_HIBERNATE_DDL_AUTO=${JPA_HIBERNATE_DDL_AUTO}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION_MS=${JWT_EXPIRATION_MS}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - ADMIN_EGN=${ADMIN_EGN}
+      - ADMIN_FIRST_NAME=${ADMIN_FIRST_NAME}
+      - ADMIN_LAST_NAME=${ADMIN_LAST_NAME}
+      - ADMIN_ADDRESS=${ADMIN_ADDRESS}
+      - ADMIN_TELEPHONE=${ADMIN_TELEPHONE}
+      - ADMIN_STATUS=${ADMIN_STATUS}
+      - SPRING_MAIL_HOST=${SPRING_MAIL_HOST}
+      - SPRING_MAIL_PORT=${SPRING_MAIL_PORT}
+      - SPRING_MAIL_USERNAME=${SPRING_MAIL_USERNAME}
+      - SPRING_MAIL_PASSWORD=${SPRING_MAIL_PASSWORD}
+      - SPRING_MAIL_FROM=${SPRING_MAIL_FROM}
+  
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        - VITE_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY}
     container_name: inreach-frontend
     env_file:
       - .env
@@ -54,7 +66,6 @@ services:
     depends_on:
       - backend
     environment:
-      API_URL: ${API_URL:-http://backend:8080}
-
+      - API_URL=${API_URL}
 volumes:
   postgres_data:
