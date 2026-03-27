@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
@@ -103,6 +104,10 @@ class AdminDashboardServiceIntegrationTest {
     void removeUserRole_shouldRemoveRoleAndPersistInDatabase() {
         adminDashboardService.addUserRole(EGN, new AssignUserRoleRequest("Doctor"));
 
+        User userWithDoctorRole = userRepository.findById(EGN).orElseThrow();
+        userWithDoctorRole.setDescription("Board-certified specialist");
+        userRepository.save(userWithDoctorRole);
+
         UserRoleUpdateResponse response = adminDashboardService.removeUserRole(
                 EGN,
                 new AssignUserRoleRequest("Doctor")
@@ -115,6 +120,7 @@ class AdminDashboardServiceIntegrationTest {
         User reloaded = userRepository.findById(EGN).orElseThrow();
         Set<String> roleNames = reloaded.getRoles().stream().map(Role::getName).collect(Collectors.toSet());
         assertEquals(Set.of("Patient"), roleNames);
+        assertNull(reloaded.getDescription());
     }
 
     private Role getOrCreateRole(String name, String description) {
