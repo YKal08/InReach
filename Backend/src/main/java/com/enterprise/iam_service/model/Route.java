@@ -31,7 +31,7 @@ public class Route {
     private LocalDate date;
 
     @Builder.Default
-    private String status = "ACTIVE"; // ACTIVE → COMPLETED
+    private String status = "DRAFT"; // DRAFT -> CONFIRMED -> CANCELLED
 
     @CreationTimestamp
     private LocalDateTime createdAt;
