@@ -22,12 +22,14 @@ export default function Navbar() {
             {isEasyMode ? "Home" : "InReach"}
           </Link>
           <div className="h-5 w-px bg-white opacity-30" />
-          <Link
-            to="/doctors"
-            className="text-white hover:text-gray-200 font-medium transition py-1 hidden sm:inline text-sm"
-          >
-            Doctors
-          </Link>
+          {!isEasyMode && (
+            <Link
+              to="/doctors"
+              className="text-white hover:text-gray-200 font-medium transition py-1 hidden sm:inline text-sm"
+            >
+              Doctors
+            </Link>
+          )}
         </div>
 
         {/* Right */}
@@ -55,12 +57,14 @@ export default function Navbar() {
           >
             Login
           </Link>
-          <Link
-            to="/register"
-            className="bg-[var(--clr-primary)] text-white px-3 py-1.5 rounded-md hover:bg-[var(--clr-nav-light)] font-medium transition whitespace-nowrap text-sm"
-          >
-            Register
-          </Link>
+          {!isEasyMode && (
+            <Link
+              to="/register"
+              className="bg-[var(--clr-primary)] text-white px-3 py-1.5 rounded-md hover:bg-[var(--clr-nav-light)] font-medium transition whitespace-nowrap text-sm"
+            >
+              Register
+            </Link>
+          )}
         </div>
       </div>
     </nav>
