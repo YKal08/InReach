@@ -33,7 +33,7 @@ jobs:
         with:
           filters: |
             backend:
-              - 'backend/**'
+              - 'Backend/**'
             frontend:
               - 'frontend/**'
 
