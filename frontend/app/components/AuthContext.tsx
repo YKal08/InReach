@@ -12,14 +12,22 @@ interface User {
   createdAt?: string;
 }
 
+export interface RegistrationLocation {
+  lat: number;
+  lng: number;
+  address: string;
+}
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (userData: any) => Promise<void>;
+  register: (userData: any, location?: RegistrationLocation) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  isDoctor: boolean;
+  registrationLocation: RegistrationLocation | null;
   refreshUser: () => Promise<void>;
 }
 
@@ -29,10 +37,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [registrationLocation, setRegistrationLocation] = useState<RegistrationLocation | null>(null);
 
   // Initialize from localStorage
   useEffect(() => {
     const storedToken = localStorage.getItem("accessToken");
+    const storedLocation = localStorage.getItem("registrationLocation");
+
+    if (storedLocation) {
+      try { setRegistrationLocation(JSON.parse(storedLocation)); } catch {}
+    }
+
     if (storedToken) {
       setToken(storedToken);
       fetchUserProfile(storedToken);
@@ -47,19 +62,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const profile = await api.get<User>("/users/me", {
         Authorization: `Bearer ${authToken}`,
       });
-      
-      // Mock full name and EGN if not present (for dashboard demo)
+
       const enhancedProfile = {
         ...profile,
         firstName: profile.firstName || "John",
-        lastName: profile.lastName || "Doe",
-        egn: profile.egn || "5204128543"
+        lastName:  profile.lastName  || "Doe",
+        egn:       profile.egn       || "5204128543",
       };
-      
+
       setUser(enhancedProfile);
     } catch (error) {
       console.error("Failed to fetch user profile:", error);
-      // If token is invalid, logout
       logout();
     } finally {
       setIsLoading(false);
@@ -67,50 +80,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login = async (email: string, password: string) => {
-    try {
-      const response = await api.post<{ accessToken: string }>("/auth/login", {
-        email,
-        password,
-      });
-
-      const newToken = response.accessToken;
-      localStorage.setItem("accessToken", newToken);
-      setToken(newToken);
-      await fetchUserProfile(newToken);
-    } catch (error) {
-      throw error;
-    }
+    const response = await api.post<{ accessToken: string }>("/auth/login", { email, password });
+    const newToken = response.accessToken;
+    localStorage.setItem("accessToken", newToken);
+    setToken(newToken);
+    await fetchUserProfile(newToken);
   };
 
-  const register = async (userData: any) => {
-    try {
-      // Backend registration endpoint
-      const response = await api.post<{ accessToken: string }>("/auth/register", userData);
+  const register = async (userData: any, location?: RegistrationLocation) => {
+    const response = await api.post<{ accessToken: string }>("/auth/register", userData);
+    const newToken = response.accessToken;
+    localStorage.setItem("accessToken", newToken);
+    setToken(newToken);
 
-      // Store token but user remains PENDING
-      const newToken = response.accessToken;
-      localStorage.setItem("accessToken", newToken);
-      setToken(newToken);
-      // We don't fetch profile here necessarily, or if we do, it should show PENDING status
-      await fetchUserProfile(newToken);
-    } catch (error) {
-      throw error;
+    // Persist the registration location so it seeds doctor proximity on all pages
+    if (location) {
+      localStorage.setItem("registrationLocation", JSON.stringify(location));
+      setRegistrationLocation(location);
     }
+
+    await fetchUserProfile(newToken);
   };
 
   const logout = () => {
     localStorage.removeItem("accessToken");
+    // Keep registrationLocation even after logout for convenience — remove if privacy matters
     setToken(null);
     setUser(null);
   };
 
   const refreshUser = async () => {
-    if (token) {
-      await fetchUserProfile(token);
-    }
+    if (token) await fetchUserProfile(token);
   };
 
-  const value = {
+  // A user is a doctor if any of their roles contains "DOCTOR" (handles "DOCTOR" or "ROLE_DOCTOR")
+  const isDoctor = !!user?.roles?.some((r) => r.toUpperCase().includes("DOCTOR"));
+
+  const value: AuthContextType = {
     user,
     token,
     isLoading,
@@ -118,6 +124,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     register,
     logout,
     isAuthenticated: !!token && !!user,
+    isDoctor,
+    registrationLocation,
     refreshUser,
   };
 
@@ -126,8 +134,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
   return context;
 }

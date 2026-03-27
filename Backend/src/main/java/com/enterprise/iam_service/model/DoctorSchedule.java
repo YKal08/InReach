@@ -2,7 +2,7 @@ package com.enterprise.iam_service.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-
+import lombok.experimental.SuperBuilder;
 
 
 @Entity
@@ -16,7 +16,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 public class DoctorSchedule extends BaseSchedule {
 
     @ManyToOne(fetch = FetchType.LAZY)

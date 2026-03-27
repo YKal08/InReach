@@ -33,6 +33,9 @@ public class User {
 
     private String telephone;
 
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
     // ! SECURITY: unique=true prevents duplicate accounts with the same email.
     @Column(unique = true, nullable = false)
     private String email;

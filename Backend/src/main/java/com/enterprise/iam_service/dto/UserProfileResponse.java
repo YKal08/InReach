@@ -1,13 +1,15 @@
 package com.enterprise.iam_service.dto;
 
-import java.time.LocalDateTime;
-import java.util.Set;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record UserProfileResponse(
-    String email, 
-    String status,
-    Set<String> roles,
-    LocalDateTime lastLogin,
-    LocalDateTime createdAt
+    String egn,
+    String firstName,
+    String lastName,
+    String address,
+    String telephone,
+    String email,
+    String description,
+    boolean doctor
 ) {}

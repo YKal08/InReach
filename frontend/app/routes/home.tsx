@@ -1,190 +1,276 @@
-import { useState, lazy, Suspense } from "react";
+import { useState, useMemo, useEffect, lazy, Suspense } from "react";
 import { Link } from "react-router";
 import Navbar from "../components/Navbar";
 import { useEasyMode } from "../components/EasyModeContext";
-import RequestDoctorModal from "../components/RequestDoctorModal";
 import { useAuth } from "../components/AuthContext";
+import { calculateDistance } from "../utils/distance";
+import DoctorDetailModal from "../components/DoctorDetailModal";
+import { useRoleGuard } from "../utils/useRoleGuard";
 
 const MapComponent = lazy(() => import("../components/MapPicker"));
 
-// Pending requests mock data (shared between both views)
+interface Doctor {
+  id: number;
+  name: string;
+  specialty: string;
+  location: string;
+  phone: string;
+  email: string;
+  bio: string;
+  availability: string;
+  image: string;
+  lat: number;
+  lng: number;
+  distance?: number;
+}
+
+const ALL_DOCTORS: Doctor[] = [
+  { id: 1, name: "Dr. Maria Ivanova",       specialty: "General Medicine", location: "Sofia",   phone: "+359 (2) 123-4567",   email: "maria.ivanova@inreach.bg",      bio: "Experienced general practitioner with a passion for preventive care and patient education.",          availability: "Mon-Fri, 9AM-5PM",       image: "https://ui-avatars.com/api/?name=Maria+Ivanova&background=4a4699&color=fff&bold=true&size=200",       lat: 42.6977, lng: 23.3219 },
+  { id: 2, name: "Dr. Alexander Petrov",    specialty: "Cardiology",       location: "Plovdiv", phone: "+359 (32) 234-5678",  email: "alex.petrov@inreach.bg",        bio: "Specializing in cardiovascular diseases with advanced diagnostic expertise.",                          availability: "Tue-Sat, 10AM-6PM",      image: "https://ui-avatars.com/api/?name=Alexander+Petrov&background=4a4699&color=fff&bold=true&size=200",    lat: 42.1354, lng: 24.7453 },
+  { id: 3, name: "Dr. Elena Georgieva",     specialty: "Pediatrics",       location: "Varna",   phone: "+359 (52) 345-6789",  email: "elena.georgieva@inreach.bg",    bio: "Child health specialist dedicated to providing compassionate pediatric care.",                          availability: "Mon-Thu, 8AM-4PM",       image: "https://ui-avatars.com/api/?name=Elena+Georgieva&background=4a4699&color=fff&bold=true&size=200",     lat: 43.2141, lng: 27.9147 },
+  { id: 4, name: "Dr. Ivan Dimitrov",       specialty: "Orthopedics",      location: "Burgas",  phone: "+359 (56) 456-7890",  email: "ivan.dimitrov@inreach.bg",      bio: "Expert in bone and joint conditions with surgical and non-surgical treatment options.",                 availability: "Wed-Sun, 11AM-7PM",      image: "https://ui-avatars.com/api/?name=Ivan+Dimitrov&background=4a4699&color=fff&bold=true&size=200",      lat: 42.5048, lng: 27.4626 },
+  { id: 5, name: "Dr. Sofia Nikolova",      specialty: "Dermatology",      location: "Sofia",   phone: "+359 (2) 567-8901",   email: "sofia.nikolova@inreach.bg",     bio: "Skin health specialist providing diagnostic and therapeutic dermatological services.",                  availability: "Tue-Sat, 9AM-5PM",       image: "https://ui-avatars.com/api/?name=Sofia+Nikolova&background=4a4699&color=fff&bold=true&size=200",     lat: 42.6977, lng: 23.3219 },
+  { id: 6, name: "Dr. Yorgos Papadopoulos", specialty: "Neurology",       location: "Plovdiv", phone: "+359 (32) 678-9012",  email: "yorgos.papadopoulos@inreach.bg",bio: "Neurological disorders specialist with comprehensive diagnostic and treatment expertise.",                availability: "Mon, Wed, Fri, 9AM-3PM", image: "https://ui-avatars.com/api/?name=Yorgos+Papadopoulos&background=4a4699&color=fff&bold=true&size=200",lat: 42.1354, lng: 24.7453 },
+];
+
 const pendingRequests: any[] = [];
 
 export default function Home() {
   const { isEasyMode } = useEasyMode();
-  const { user } = useAuth();
-  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const { user, registrationLocation } = useAuth();
 
-  // Easy Mode inline form state
-  const [formData, setFormData] = useState({ doctorType: "", address: "", situation: "" });
+  // Patient-only guard — redirects doctors to /doctor-home, guests to /login
+  const { isLoading: authLoading } = useRoleGuard("PATIENT");
+
+  // ── Doctor proximity ───────────────────────────────────────────────────────
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationStatus, setLocationStatus] = useState<"loading" | "granted" | "default">("loading");
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [requestSentIds, setRequestSentIds] = useState<number[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSpecialty, setSelectedSpecialty] = useState("");
+  const [maxDistance] = useState(200);
+
+  const specialties = Array.from(new Set(ALL_DOCTORS.map((d) => d.specialty))).sort();
+
+  useEffect(() => {
+    // Seed with registration location first
+    if (registrationLocation) {
+      setUserLocation({ lat: registrationLocation.lat, lng: registrationLocation.lng });
+      setLocationStatus("granted");
+    }
+
+    if (!("geolocation" in navigator)) {
+      if (!registrationLocation) {
+        setUserLocation({ lat: 42.6977, lng: 23.3219 });
+        setLocationStatus("default");
+      }
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocationStatus("granted"); },
+      () => {
+        if (!registrationLocation) {
+          setUserLocation({ lat: 42.6977, lng: 23.3219 });
+          setLocationStatus("default");
+        }
+      }
+    );
+  }, [registrationLocation]);
+
+  const doctorsWithDistance = useMemo(() => {
+    if (!userLocation) return ALL_DOCTORS;
+    return ALL_DOCTORS.map((d) => ({ ...d, distance: calculateDistance(userLocation.lat, userLocation.lng, d.lat, d.lng) }));
+  }, [userLocation]);
+
+  const filteredDoctors = useMemo(() => {
+    return doctorsWithDistance
+      .filter((d) => {
+        const matchesSearch = d.name.toLowerCase().includes(searchQuery.toLowerCase()) || d.specialty.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSpecialty = !selectedSpecialty || d.specialty === selectedSpecialty;
+        return matchesSearch && matchesSpecialty && (d.distance === undefined || d.distance <= maxDistance);
+      })
+      .sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
+  }, [doctorsWithDistance, searchQuery, selectedSpecialty, maxDistance]);
+
+  // ── Normal mode request form state ────────────────────────────────────────
   const [showMap, setShowMap] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
+  const [requestForm, setRequestForm] = useState({ doctorType: "", address: "", situation: "", notes: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [locating, setLocating] = useState(false);
 
-  const doctorTypes = [
-    "General Practitioner", "Pediatrician", "Cardiologist", "Dermatologist",
-    "Orthopedic Surgeon", "Neurologist", "Psychiatrist", "Dentist",
-    "Eye Specialist", "ENT Specialist",
-  ];
+  const doctorTypes = ["General Practitioner", "Pediatrician", "Cardiologist", "Dermatologist", "Orthopedic Surgeon", "Neurologist", "Psychiatrist", "Dentist", "Eye Specialist", "ENT Specialist"];
 
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLTextAreaElement>) => {
+  // Pre-fill address from registration location
+  useEffect(() => {
+    if (registrationLocation && !requestForm.address) {
+      setSelectedLocation(registrationLocation);
+      setRequestForm((prev) => ({ ...prev, address: registrationLocation.address }));
+    }
+  }, [registrationLocation]);
+
+  const handleRequestChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setRequestForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleLocationSelect = (lat: number, lng: number, address: string) => {
     setSelectedLocation({ lat, lng, address });
-    setFormData((prev) => ({ ...prev, address }));
+    setRequestForm((prev) => ({ ...prev, address }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleAutoLocate = () => {
+    if (!("geolocation" in navigator)) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`)
+          .then((r) => r.json())
+          .then((data) => {
+            const addr = data.display_name || `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+            setSelectedLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude, address: addr });
+            setRequestForm((prev) => ({ ...prev, address: addr }));
+          })
+          .finally(() => setLocating(false));
+      },
+      () => setLocating(false)
+    );
+  };
+
+  const handleRequestSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.doctorType || !formData.address.trim() || !formData.situation.trim()) {
-      alert("Please fill in all fields");
+    if (!requestForm.doctorType || !requestForm.address.trim() || !requestForm.situation.trim()) {
+      alert("Please fill in all required fields.");
       return;
     }
-    console.log("Doctor Request:", formData, selectedLocation);
-    setFormData({ doctorType: "", address: "", situation: "" });
-    setSelectedLocation(null);
+    console.log("Request:", requestForm, selectedLocation);
+    setRequestForm({ doctorType: "", address: registrationLocation?.address ?? "", situation: "", notes: "" });
+    setSelectedLocation(registrationLocation ?? null);
     setShowMap(false);
     setSubmitted(true);
     setTimeout(() => setSubmitted(false), 4000);
   };
 
-  // ── Easy Mode ────────────────────────────────────────────────────────────────
+  if (authLoading) return null;
+
+  // ── EASY MODE — doctors list with search + specialty filter ────────────────
   if (isEasyMode) {
     return (
       <div className="min-h-screen bg-white">
         <Navbar />
-
         <div className="em-page">
-          {/* Request form */}
-          <section className="em-card">
-            <h1 className="em-heading">Request a Practitioner</h1>
-            <p className="em-body">Fill in the form below to request a visit from a medical professional.</p>
+          <div>
+            <h1 className="em-heading">Nearby Specialists</h1>
+            <p className="em-body">
+              {locationStatus !== "loading"
+                ? locationStatus === "granted"
+                  ? `Showing doctors within ${maxDistance} km of your location.`
+                  : `Showing doctors within ${maxDistance} km of Sofia (location access denied).`
+                : "Detecting your location…"}
+            </p>
+          </div>
 
-            {submitted && (
-              <div className="em-success">Your request has been submitted successfully.</div>
+          {/* Search bar */}
+          <div className="em-card flex items-center gap-3" style={{ padding: "12px 20px" }}>
+            <svg className="w-6 h-6 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Search by name or specialty…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="em-input border-0 focus:ring-0 flex-1"
+              style={{ padding: "0", border: "none", boxShadow: "none" }}
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery("")} className="text-gray-400 hover:text-gray-600 shrink-0" style={{ lineHeight: 0 }}>
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
             )}
+          </div>
 
-            <form onSubmit={handleSubmit} className="em-form-grid">
-              {/* Doctor Type */}
-              <div>
-                <label htmlFor="em-doctorType" className="em-label">
-                  Type of Doctor <span className="text-red-500">*</span>
-                </label>
-                <select
-                  id="em-doctorType"
-                  name="doctorType"
-                  value={formData.doctorType}
-                  onChange={handleChange}
-                  className="em-input"
+          {/* Specialty filter — always visible */}
+          <div className="em-card" style={{ padding: "16px 20px" }}>
+            <label className="em-label" style={{ fontSize: "16px", marginBottom: "8px" }}>Filter by Specialty</label>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedSpecialty("")}
+                className={`px-4 py-2 rounded-full text-base font-semibold border-2 transition-colors ${!selectedSpecialty ? "bg-(--clr-primary) text-white border-(--clr-primary)" : "border-(--clr-accent) text-(--clr-nav) hover:border-(--clr-primary)"}`}
+              >
+                All
+              </button>
+              {specialties.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setSelectedSpecialty(selectedSpecialty === s ? "" : s)}
+                  className={`px-4 py-2 rounded-full text-base font-semibold border-2 transition-colors ${selectedSpecialty === s ? "bg-(--clr-primary) text-white border-(--clr-primary)" : "border-(--clr-accent) text-(--clr-nav) hover:border-(--clr-primary)"}`}
                 >
-                  <option value="">Select a doctor type</option>
-                  {doctorTypes.map((type) => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
-              </div>
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
 
-              {/* Location */}
-              <div>
-                <label className="em-label">
-                  Location <span className="text-red-500">*</span>
-                </label>
-                {!showMap ? (
-                  <div className="flex items-center border-2 border-gray-300 rounded-lg overflow-hidden">
-                    <textarea
-                      name="address"
-                      value={formData.address}
-                      onChange={handleChange}
-                      placeholder="Enter your address or use the map pin"
-                      rows={1}
-                      className="flex-1 px-4 py-3 border-0 focus:outline-none resize-none text-base"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowMap(true)}
-                      className="p-3 text-gray-500 hover:text-[var(--clr-accent)] hover:bg-gray-50 border-l border-gray-300"
-                      title="Pick on map"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <Suspense fallback={<div className="h-48 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500">Loading map...</div>}>
-                      <MapComponent selectedLocation={selectedLocation} onLocationSelect={handleLocationSelect} />
-                    </Suspense>
-                    <div className="flex gap-3">
-                      <button type="button" onClick={() => { setShowMap(false); setSelectedLocation(null); setFormData((p) => ({ ...p, address: "" })); }} className="flex-1 border-2 border-gray-300 text-gray-700 px-4 py-2.5 rounded-lg font-medium">Cancel</button>
-                      <button type="button" onClick={() => setShowMap(false)} className="flex-1 bg-(--clr-primary) text-white px-4 py-2.5 rounded-lg font-medium hover:bg-(--clr-primary-hover) transition-colors duration-200">Done</button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Situation — full width */}
-              <div className="em-full-width">
-                <label htmlFor="em-situation" className="em-label">
-                  Describe Your Situation <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  id="em-situation"
-                  name="situation"
-                  value={formData.situation}
-                  onChange={handleChange}
-                  placeholder="Explain your medical situation, symptoms, or concerns..."
-                  rows={5}
-                  className="em-input resize-none"
-                />
-              </div>
-
-              {/* Submit — full width */}
-              <div className="em-full-width">
-                <button type="submit" className="em-btn-primary w-full">
-                  Submit Request
+          {/* Doctor list */}
+          <div className="flex flex-col gap-4">
+            {filteredDoctors.length === 0 ? (
+              <div className="em-card text-center">
+                <p className="em-body text-gray-500">No doctors found. Try a different search or specialty.</p>
+                <button
+                  onClick={() => { setSearchQuery(""); setSelectedSpecialty(""); }}
+                  className="em-btn-primary mt-4" style={{ padding: "12px 24px", fontSize: "16px" }}
+                >
+                  Clear Filters
                 </button>
               </div>
-            </form>
-          </section>
-
-          {/* Pending Requests */}
-          <section className="em-card">
-            <h2 className="em-subheading">Your Pending Requests</h2>
-
-            {pendingRequests.length === 0 ? (
-              <p className="em-body text-gray-500">You have no pending requests at this time.</p>
-            ) : (
-              <div className="space-y-4">
-                {pendingRequests.map((req: any) => (
-                  <div key={req.id} className="border-2 border-gray-200 rounded-lg p-5">
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="em-body font-semibold">{req.doctorType}</h3>
-                      <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">{req.status}</span>
-                    </div>
-                    <p className="em-body text-gray-600 mb-1"><span className="font-semibold">Location:</span> {req.address}</p>
-                    <p className="em-body text-gray-600"><span className="font-semibold">Situation:</span> {req.situation}</p>
+            ) : filteredDoctors.map((doctor) => (
+              <div
+                key={doctor.id}
+                className="em-card flex flex-row overflow-hidden cursor-pointer"
+                style={{ padding: 0 }}
+                onClick={() => { setSelectedDoctor(doctor); setIsModalOpen(true); }}
+              >
+                <div className="w-40 shrink-0 bg-linear-to-b from-(--clr-primary) to-(--clr-primary-hover) overflow-hidden">
+                  <img src={doctor.image} alt={doctor.name} className="w-full h-full object-cover" />
+                </div>
+                <div className="p-5 flex flex-col justify-center grow">
+                  <div className="flex justify-between items-start mb-1">
+                    <h2 className="em-subheading" style={{ marginBottom: 0 }}>{doctor.name}</h2>
+                    {doctor.distance !== undefined && (
+                      <span className="em-body font-bold text-(--clr-primary-hover) shrink-0 ml-4" style={{ marginBottom: 0 }}>{doctor.distance.toFixed(1)} km</span>
+                    )}
                   </div>
-                ))}
+                  <p className="inline-flex self-start px-3 py-1 rounded-full text-sm font-semibold bg-(--clr-accent-light) text-(--clr-primary-hover) mb-2 mt-1">{doctor.specialty}</p>
+                  <p className="em-body text-gray-600 line-clamp-2" style={{ marginBottom: 0 }}>{doctor.bio}</p>
+                </div>
               </div>
-            )}
-          </section>
+            ))}
+          </div>
         </div>
+
+        <DoctorDetailModal
+          doctor={selectedDoctor}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSendRequest={(id) => setRequestSentIds((p) => [...p, id])}
+          requestSent={selectedDoctor ? requestSentIds.includes(selectedDoctor.id) : false}
+        />
       </div>
     );
   }
 
-  // ── Normal Mode ──────────────────────────────────────────────────────────────
+  // ── NORMAL MODE ─────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
 
       <div className="max-w-5xl mx-auto px-4 py-12">
-        {/* Profile Identity */}
+        {/* Profile header */}
         <div className="mb-10 pl-1">
           <h1 className="text-3xl font-bold text-gray-900 border-b-2 border-gray-100 pb-2 mb-1">
             {user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : "Patient Dashboard"}
@@ -194,10 +280,9 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Dashboard Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          
-          {/* Last Checkup Box (Simplified) */}
+
+          {/* Last Checkup */}
           <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col min-h-[160px]">
             <p className="text-gray-500 text-xs uppercase tracking-wide mb-2 font-bold">Health History</p>
             <h2 className="text-xl font-bold text-gray-900 mb-2">Last Checkup</h2>
@@ -208,7 +293,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Condition Overview (Simplified) */}
+          {/* Condition Overview */}
           <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col min-h-[160px]">
             <p className="text-gray-500 text-xs uppercase tracking-wide mb-2 font-bold">Health Summary</p>
             <h2 className="text-xl font-bold text-gray-900 mb-2">Condition Overview</h2>
@@ -219,38 +304,28 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Request Practitioner (Existing) */}
-          <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col">
-            <p className="text-gray-500 text-xs uppercase tracking-wide mb-2 font-bold">Healthcare</p>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Request a Practitioner</h2>
-            <p className="text-sm text-gray-600 mb-6 flex-grow">
-              Submit a request to connect with a qualified medical professional in your area.
-            </p>
-            <button
-              onClick={() => setIsRequestModalOpen(true)}
-              className="block w-full bg-[var(--clr-primary)] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[var(--clr-primary-hover)] active:bg-[var(--clr-primary)] transition-colors duration-200 text-center"
-            >
-              Make a Request
-            </button>
-          </div>
-
-          {/* Pending Requests (Existing) */}
+          {/* Pending Requests */}
           <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col">
             <p className="text-gray-500 text-xs uppercase tracking-wide mb-2 font-bold">Status Monitor</p>
             <h2 className="text-xl font-bold text-gray-900 mb-2">{pendingRequests.length} Request{pendingRequests.length !== 1 ? "s" : ""}</h2>
-            <p className="text-sm text-gray-600 mb-6 flex-grow">
-              View the status of your submitted requests and track their progress.
-            </p>
-            <Link
-              to="/pending-requests"
-              className="block w-full bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300 active:bg-gray-400 transition-colors duration-200 text-center"
-            >
+            <p className="text-sm text-gray-600 mb-6 flex-grow">View the status of your submitted requests and track their progress.</p>
+            <Link to="/pending-requests" className="block w-full bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors duration-200 text-center">
               View Requests
+            </Link>
+          </div>
+
+          {/* Browse Doctors */}
+          <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col">
+            <p className="text-gray-500 text-xs uppercase tracking-wide mb-2 font-bold">Healthcare</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Find a Specialist</h2>
+            <p className="text-sm text-gray-600 mb-6 flex-grow">Browse doctors near you and send a visit request directly from their profile.</p>
+            <Link to="/doctors" className="block w-full bg-[var(--clr-primary)] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[var(--clr-primary-hover)] transition-colors duration-200 text-center">
+              Browse Doctors
             </Link>
           </div>
         </div>
 
-        {/* Information Section */}
+        {/* Info */}
         <div className="bg-white border border-gray-200 p-8 rounded-lg shadow-sm">
           <h2 className="text-lg font-semibold text-gray-700 uppercase tracking-wide mb-4">InReach Information</h2>
           <div className="space-y-3 text-gray-600 text-sm">
@@ -261,11 +336,6 @@ export default function Home() {
           </div>
         </div>
       </div>
-
-      <RequestDoctorModal
-        isOpen={isRequestModalOpen}
-        onClose={() => setIsRequestModalOpen(false)}
-      />
     </div>
   );
 }
