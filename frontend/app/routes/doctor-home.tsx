@@ -21,7 +21,7 @@ type DayKey = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Satu
 const DAYS: DayKey[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 const INITIAL_REQUESTS: VisitRequest[] = [
-  { id: 1, patientName: "Ivan Ivanov",    address: "ul. Shipka 1, Sofia",        situation: "High fever and cough for 3 days, temperature 39.5°C.",     lat: 42.6934, lng: 23.3352, status: "pending" },
+  { id: 1, patientName: "Ivan Ivanov",    address: "Plovdiv",        situation: "High fever and cough for 3 days, temperature 39.5°C.",     lat: 42.1352, lng: 24.7452, status: "pending" },
   { id: 2, patientName: "Elena Petrova",  address: "ul. Oborishte 15, Sofia",    situation: "Sudden acute lower-back pain, difficulty walking.",         lat: 42.6953, lng: 23.3401, status: "pending" },
   { id: 3, patientName: "Georgi Angelov", address: "bul. Vitosha 20, Sofia",     situation: "Allergic reaction after starting new medication yesterday.", lat: 42.6912, lng: 23.3198, status: "pending" },
   { id: 4, patientName: "Maria Nikolova", address: "ul. Graf Ignatiev 5, Sofia", situation: "6-month pediatric checkup.",                                lat: 42.6895, lng: 23.3245, status: "pending" },
@@ -191,20 +191,10 @@ export default function DoctorHome() {
     if (activeIndex === null) return;
     const updated = requests.map((r, i) => i === activeIndex ? { ...r, status: "done" as const } : r);
     setRequests(updated);
-    const next = updated.findIndex((r, i) => i > activeIndex && r.status === "pending");
-    if (next !== -1) {
-      setActiveIndex(next);
-      const nextReq = updated[next];
-      // Advance modal to next stop
-      setMapModal({
-        embedUrl: buildSingleEmbedUrl(DOCTOR_BASE, nextReq),
-        externalUrl: buildSingleExternalUrl(DOCTOR_BASE, nextReq),
-        title: `Navigate to ${nextReq.patientName}`,
-      });
-    } else {
-      setActiveIndex(null);
-      setMapModal(null);
-    }
+    
+    // Just mark as done and close the map — don't auto-open the next one
+    setActiveIndex(null);
+    setMapModal(null);
   };
 
   const toggleDay = (day: DayKey) => setSchedule((p) => ({ ...p, [day]: { ...p[day], active: !p[day].active } }));
@@ -319,7 +309,7 @@ export default function DoctorHome() {
                       {activeIndex === idx && (
                         <button
                           onClick={handleMarkDone}
-                          className="em-btn-primary" style={{ padding: "8px 16px", fontSize: "14px", background: "#16a34a" }}
+                          className="em-btn-primary" style={{ padding: "8px 16px", fontSize: "14px", background: "var(--clr-accent-light)", color: "var(--clr-primary-hover)" }}
                         >
                           Done
                         </button>
@@ -421,7 +411,7 @@ export default function DoctorHome() {
                   </button>
                   <button
                     onClick={handleMarkDone}
-                    className="flex-1 bg-green-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors duration-200 text-sm"
+                    className="flex-1 bg-(--clr-accent-light) text-(--clr-primary-hover) px-4 py-3 rounded-lg font-semibold hover:opacity-80 transition-colors duration-200 text-sm"
                   >
                     Mark Done
                   </button>
@@ -491,7 +481,7 @@ export default function DoctorHome() {
                     {activeIndex === idx && (
                       <button
                         onClick={handleMarkDone}
-                        className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors"
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-(--clr-accent-light) text-(--clr-primary-hover) hover:opacity-80 transition-colors"
                       >
                         Done
                       </button>

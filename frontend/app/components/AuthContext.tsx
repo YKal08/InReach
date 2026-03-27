@@ -2,10 +2,12 @@ import { createContext, useState, useContext, useEffect, type ReactNode } from "
 import { api } from "../utils/api";
 
 interface User {
-  firstName?: string;
-  lastName?: string;
-  egn?: string;
+  firstName: string;
+  lastName: string;
+  egn: string;
   email: string;
+  address: string;
+  telephone: string;
   status: "ACTIVE" | "PENDING" | "LOCKED";
   roles: string[];
   lastLogin?: string;
