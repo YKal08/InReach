@@ -28,6 +28,7 @@ export function LanguageThemeToggle() {
         >
           БГ
         </button>
+        
       </div>
 
       {/* Theme Toggle */}
