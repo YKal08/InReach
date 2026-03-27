@@ -9,7 +9,7 @@ COPY . .
 
 # Build-time env vars that Vite needs to bundle
 ARG GOOGLE_MAPS_API_KEY
-ARG VITE_API_URL=https://inreach.elsys.itgix.eu
+ARG VITE_API_URL=https://inreach.elsys.itgix.eu/api
 ENV GOOGLE_MAPS_API_KEY=$GOOGLE_MAPS_API_KEY
 ENV VITE_API_URL=$VITE_API_URL
 
