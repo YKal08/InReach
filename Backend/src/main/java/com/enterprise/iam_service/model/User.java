@@ -29,7 +29,15 @@ public class User {
     @Column(nullable = false)
     private String lastName;
 
-    private String address;
+    @Column(name = "raw_address")
+    private String rawAddress;
+
+    private Double lat;
+
+    private Double lng;
+
+    @Column(name = "geocoded_at")
+    private LocalDateTime geocodedAt;
 
     private String telephone;
 
