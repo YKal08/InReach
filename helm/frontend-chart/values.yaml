@@ -70,7 +70,7 @@ ingress:
         - path: /api
           pathType: Prefix
           serviceName: backend-chart
-          servicePort: 80
+          servicePort: 8080
         - path: /
           pathType: Prefix
           servicePort: 3000
