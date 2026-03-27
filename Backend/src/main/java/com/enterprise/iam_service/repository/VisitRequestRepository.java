@@ -26,4 +26,7 @@ public interface VisitRequestRepository extends JpaRepository<VisitRequest, UUID
  
     // * All requests currently targeting a doctor by EGN.
     List<VisitRequest> findByDoctorEgnAndStatus(String doctorEgn, String status);
+
+    // * Oldest-first order for planning priority.
+    List<VisitRequest> findByDoctorEgnAndStatusOrderByCreatedAtAsc(String doctorEgn, String status);
 }
