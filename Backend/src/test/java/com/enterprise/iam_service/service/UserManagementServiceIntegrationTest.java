@@ -4,6 +4,8 @@ import com.enterprise.iam_service.dto.UserProfileResponse;
 import com.enterprise.iam_service.dto.UserProfileUpdateRequest;
 import com.enterprise.iam_service.model.Role;
 import com.enterprise.iam_service.model.User;
+import com.enterprise.iam_service.repository.DoctorScheduleRepository;
+import com.enterprise.iam_service.repository.DriverScheduleRepository;
 import com.enterprise.iam_service.repository.RoleRepository;
 import com.enterprise.iam_service.repository.UserRepository;
 import com.enterprise.iam_service.repository.VisitRequestRepository;
@@ -40,11 +42,19 @@ class UserManagementServiceIntegrationTest {
     private VisitRequestRepository visitRequestRepository;
 
     @Autowired
+    private DoctorScheduleRepository doctorScheduleRepository;
+
+    @Autowired
+    private DriverScheduleRepository driverScheduleRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @BeforeEach
     void setupData() {
         visitRequestRepository.deleteAll();
+        doctorScheduleRepository.deleteAll();
+        driverScheduleRepository.deleteAll();
         userRepository.deleteAll();
 
         Role doctorRole = getOrCreateRole("Doctor", "Doctor role");
