@@ -69,7 +69,7 @@ ingress:
       paths:
         - path: /api
           pathType: Prefix
-          serviceName: backend-chart
+          serviceName: backend-backend-chart
           servicePort: 8080
         - path: /
           pathType: Prefix
