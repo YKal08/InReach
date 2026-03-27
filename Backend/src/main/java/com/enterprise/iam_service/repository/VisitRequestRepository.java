@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
  
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
  
 @Repository
@@ -16,7 +17,13 @@ public interface VisitRequestRepository extends JpaRepository<VisitRequest, UUID
  
     // * A specific patient's full request history.
     List<VisitRequest> findByUser(User user);
+
+    // * Same as above, but sorted newest first for UI display.
+    List<VisitRequest> findByUserOrderByCreatedAtDesc(User user);
+
+    // * Fetches one request only if it belongs to the given user.
+    Optional<VisitRequest> findByIdAndUser(UUID id, User user);
  
-    // * All requests currently assigned to a doctor (for dispatch checks).
-    List<VisitRequest> findByAssignedDoctorAndStatus(User doctor, String status);
+    // * All requests currently targeting a doctor by EGN.
+    List<VisitRequest> findByDoctorEgnAndStatus(String doctorEgn, String status);
 }
