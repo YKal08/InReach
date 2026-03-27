@@ -26,7 +26,7 @@ export default function Profile() {
     firstName: user?.firstName ?? "",
     lastName: user?.lastName ?? "",
     email: user?.email ?? "",
-    telephone: "",
+    telephone: user?.telephone ?? "",
     address: registrationLocation?.address ?? "",
   });
 
@@ -120,7 +120,7 @@ export default function Profile() {
     setError("");
     setIsSaving(true);
     try {
-      await api.put("/users/me", {
+      await api.patch("/users/me", {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
