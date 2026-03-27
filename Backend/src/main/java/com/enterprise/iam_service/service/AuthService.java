@@ -28,6 +28,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
     private final SecurityService securityService;
+    private final GoogleGeocodingService googleGeocodingService;
 
     // * Business Logic: Handles the end-to-end registration flow for new users.
     public AuthResponse register(RegisterRequest request) {
@@ -48,7 +49,7 @@ public class AuthService {
             .egn(request.egn())
             .firstName(request.firstName())
             .lastName(request.lastName())
-            .address(request.address())
+            .rawAddress(request.address())
             .telephone(request.telephone())
             .email(request.email())
             .passwordHash(passwordEncoder.encode(request.password()))
@@ -56,6 +57,8 @@ public class AuthService {
             .status("ACTIVE") //
             .roles(Set.of(patientRole))
             .build();
+
+        googleGeocodingService.geocodeAndApplyToUser(user, request.address());
 
         // * Step 3: Persistence and Token Issuance.
         userRepository.save(user);

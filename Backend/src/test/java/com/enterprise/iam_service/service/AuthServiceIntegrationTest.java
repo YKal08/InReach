@@ -87,7 +87,7 @@ class AuthServiceIntegrationTest {
                 .egn("9876543210")
                 .firstName("Existing")
                 .lastName("User")
-                .address("Sofia")
+            .rawAddress("Sofia")
                 .telephone("+359888222222")
                 .email("existing@doe.com")
                 .passwordHash(passwordEncoder.encode("StrongPass1"))

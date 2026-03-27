@@ -4,6 +4,7 @@ import com.enterprise.iam_service.model.Role;
 import com.enterprise.iam_service.model.User;
 import com.enterprise.iam_service.repository.RoleRepository;
 import com.enterprise.iam_service.repository.UserRepository;
+import com.enterprise.iam_service.service.GoogleGeocodingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
@@ -19,6 +20,7 @@ public class DataInitializer implements CommandLineRunner {
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final GoogleGeocodingService googleGeocodingService;
 
     @Value("${ADMIN_EMAIL}")
     private String adminEmail;
@@ -49,7 +51,7 @@ public class DataInitializer implements CommandLineRunner {
         if (roleRepository.findByName("Admin").isEmpty()) {
 
             // * Initialize the system's core Administrative Role.
-            Role adminRole = new Role();
+             Role adminRole = new Role();
             adminRole.setName("Admin");
             adminRole.setDescription("Full system access");
             roleRepository.save(adminRole);
@@ -59,22 +61,10 @@ public class DataInitializer implements CommandLineRunner {
             patientRole.setDescription("Can submit visit requests and view prescriptions");
             roleRepository.save(patientRole);
 
-            Role adminRole  = createRole("Admin",    "Full system access");
-            Role patientRole = createRole("Patient", "Can submit visit requests and view prescriptions");
-            Role doctorRole  = createRole("Doctor",  "Can view assigned routes and issue prescriptions");
-            Role driverRole  = createRole("Driver",  "Can view and complete delivery orders");
- Role adminRole  = createRole("Admin",    "Full system access");
-66
-            Role patientRole = createRole("Patient", "Can submit visit requests and view prescriptions");
-67
-            Role doctorRole  = createRole("Doctor",  "Can view assigned routes and issue prescriptions");
-68
-            Role driverRole  = createRole("Driver",  "Can view and complete delivery orders");
-69
-​
- |  | 
-70
- 
+            Role doctorRole = new Role();
+            doctorRole.setName("Doctor");
+            doctorRole.setDescription("Can view assigned routes and issue prescriptions");
+            roleRepository.save(doctorRole);
 
             Role driverRole = new Role();
             driverRole.setName("Driver");
@@ -90,14 +80,14 @@ public class DataInitializer implements CommandLineRunner {
                     .egn(adminEgn)
                     .firstName(adminFirstName)
                     .lastName(adminLastName)
-                    .address(adminAddress)
+                    .rawAddress(adminAddress)
                     .telephone(adminTelephone)
                     .email(adminEmail)
                     .passwordHash(passwordEncoder.encode(adminPassword))
                     .status(adminStatus)
                     .roles(Set.of(adminRole))
                     .build();
-
+                googleGeocodingService.geocodeAndApplyToUser(admin, admin.getRawAddress());
                 userRepository.save(admin);
 
                 // * Audit: Log initial setup to the console.

@@ -57,7 +57,7 @@ class AdminDashboardServiceIntegrationTest {
                 .egn(EGN)
                 .firstName("Role")
                 .lastName("Tester")
-                .address("Sofia")
+            .rawAddress("Sofia")
                 .telephone("+359888000111")
                 .email("role.tester@enterprise.com")
                 .passwordHash(passwordEncoder.encode("StrongPass1"))
