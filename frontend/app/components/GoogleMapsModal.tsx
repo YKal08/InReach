@@ -13,12 +13,12 @@ export default function GoogleMapsModal({ isOpen, onClose, embedUrl, externalUrl
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-2"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 flex flex-col"
-        style={{ maxHeight: "90vh" }}
+        className="w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 flex flex-col"
+        style={{ height: "95vh", maxWidth: "95vw" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -49,7 +49,7 @@ export default function GoogleMapsModal({ isOpen, onClose, embedUrl, externalUrl
         </div>
 
         {/* Map iframe */}
-        <div className="flex-1 min-h-0" style={{ height: "600px" }}>
+        <div className="flex-1 min-h-0">
           <iframe
             src={embedUrl}
             width="100%"
