@@ -8,11 +8,6 @@ export default function Navbar() {
   const { isAuthenticated, isDoctor, logout, isLoading, user } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    navigate("/");
-  };
-
   const displayName = user?.firstName
     ? `${user.firstName}${user.lastName ? ` ${user.lastName}` : ""}`
     : user?.email?.split("@")[0] ?? "Account";
@@ -90,16 +85,7 @@ export default function Navbar() {
                     <span className="hidden sm:inline max-w-[120px] truncate">{displayName}</span>
                   </button>
 
-                  {/* Logout button */}
-                  <button
-                    onClick={handleLogout}
-                    className="text-white hover:text-gray-200 font-medium transition py-1 whitespace-nowrap text-sm flex items-center gap-1.5"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    <span className="hidden sm:inline">Logout</span>
-                  </button>
+
                 </div>
               ) : (
                 <>

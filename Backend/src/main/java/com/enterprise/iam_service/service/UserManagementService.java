@@ -1,5 +1,6 @@
 package com.enterprise.iam_service.service;
 
+import com.enterprise.iam_service.dto.DoctorResponse;
 import com.enterprise.iam_service.dto.UserProfileUpdateRequest;
 import com.enterprise.iam_service.model.User;
 import com.enterprise.iam_service.repository.UserRepository;
@@ -8,22 +9,67 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.enterprise.iam_service.dto.UserProfileResponse;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
 // ? @Service: Defines this class as a service layer component responsible for user-specific business operations.
 // ? @RequiredArgsConstructor: Injects final dependencies (UserRepository, PasswordEncoder, AuthService) via the constructor.
 @Service
 @RequiredArgsConstructor
 public class UserManagementService {
 
-    private static final String DOCTOR_ROLE = "DOCTOR";
-
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthService authService;
     private final GoogleGeocodingService googleGeocodingService;
 
+    private static final String DOCTOR_ROLE = "Doctor";
+    private static final double MAX_NEARBY_DISTANCE_KM = 100.0;
+
     private boolean isDoctor(User user) {
         return user.getRoles().stream()
                 .anyMatch(role -> DOCTOR_ROLE.equalsIgnoreCase(role.getName()));
+    }
+
+    private static double calculateDistanceKm(double lat1, double lng1, double lat2, double lng2) {
+        final double earthRadiusKm = 6371.0;
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLng = Math.toRadians(lng2 - lng1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return earthRadiusKm * c;
+    }
+
+    public List<DoctorResponse> getNearbyDoctors(String email) {
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (currentUser.getLat() == null || currentUser.getLng() == null) {
+            throw new RuntimeException("Current location is unavailable. Update your address first.");
+        }
+
+        double userLat = currentUser.getLat();
+        double userLng = currentUser.getLng();
+
+        return userRepository.findAll().stream()
+                .filter(this::isDoctor)
+                .filter(doctor -> doctor.getLat() != null && doctor.getLng() != null)
+                .filter(doctor -> !doctor.getEgn().equals(currentUser.getEgn()))
+                .map(doctor -> new DoctorResponse(
+                        doctor.getEgn(),
+                        doctor.getFirstName(),
+                        doctor.getLastName(),
+                        doctor.getRawAddress(),
+                        doctor.getTelephone(),
+                        doctor.getDescription(),
+                        calculateDistanceKm(userLat, userLng, doctor.getLat(), doctor.getLng())
+                ))
+                .filter(response -> response.distanceKm() <= MAX_NEARBY_DISTANCE_KM)
+                .sorted(Comparator.comparingDouble(DoctorResponse::distanceKm))
+                .collect(Collectors.toList());
     }
 
     // * Business Logic: Handles the secure rotation of user credentials.

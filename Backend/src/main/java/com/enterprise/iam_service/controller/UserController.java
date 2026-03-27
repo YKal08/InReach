@@ -1,6 +1,7 @@
 package com.enterprise.iam_service.controller;
 
 import com.enterprise.iam_service.dto.DoctorDescriptionUpdateRequest;
+import com.enterprise.iam_service.dto.DoctorResponse;
 import com.enterprise.iam_service.dto.PasswordChangeRequest;
 import com.enterprise.iam_service.dto.UserProfileResponse;
 import com.enterprise.iam_service.dto.UserProfileUpdateRequest;
@@ -10,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 // ? @RestController indicates that this class handles HTTP requests and returns data directly in the response body.
 // ? @RequestMapping("/api/users") ensures all endpoints in this class are prefixed with /api/users.
@@ -56,6 +59,12 @@ public class UserController {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         userManagementService.updateDoctorDescriptionByEmail(email, request.description());
         return ResponseEntity.ok("Description updated successfully");
+    }
+
+    @GetMapping("/doctors/nearby")
+    public ResponseEntity<List<DoctorResponse>> getNearbyDoctors() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(userManagementService.getNearbyDoctors(email));
     }
 
 }

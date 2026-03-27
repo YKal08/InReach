@@ -2,7 +2,7 @@
 // Defaults to localhost:8080 if not set
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
-type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
+type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 interface RequestOptions {
   method?: HttpMethod;
@@ -61,6 +61,9 @@ export const api = {
     
   put: <T>(endpoint: string, body: any, headers?: Record<string, string>) => 
     request<T>(endpoint, { method: "PUT", body, headers }),
+    
+  patch: <T>(endpoint: string, body: any, headers?: Record<string, string>) => 
+    request<T>(endpoint, { method: "PATCH", body, headers }),
     
   delete: <T>(endpoint: string, headers?: Record<string, string>) => 
     request<T>(endpoint, { method: "DELETE", headers }),

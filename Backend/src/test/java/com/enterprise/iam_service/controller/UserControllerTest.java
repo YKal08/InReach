@@ -9,6 +9,7 @@ import com.enterprise.iam_service.security.JwtAuthenticationFilter;
 import com.enterprise.iam_service.service.UserManagementService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -127,5 +128,44 @@ class UserControllerTest {
 
         verify(userManagementService, times(1))
                 .updateDoctorDescriptionByEmail("doctor@enterprise.com", "Specialist in internal medicine");
+    }
+
+    @Test
+    @WithMockUser(username = "user@enterprise.com")
+    void getNearbyDoctors_shouldReturnDoctorList() throws Exception {
+        var firstDoctor = new com.enterprise.iam_service.dto.DoctorResponse(
+                "2000000000",
+                "Near",
+                "Doctor",
+                "Sofia",
+                "+359888000000",
+                "General practice",
+                0.0
+        );
+        var secondDoctor = new com.enterprise.iam_service.dto.DoctorResponse(
+                "2000000001",
+                "Far",
+                "Doctor",
+                "Plovdiv",
+                "+359888000001",
+                "Cardiologist",
+                85.0
+        );
+
+        when(userManagementService.getNearbyDoctors(anyString()))
+                .thenReturn(List.of(firstDoctor, secondDoctor));
+
+        mockMvc.perform(get("/api/users/doctors/nearby"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].egn").value("2000000000"))
+                .andExpect(jsonPath("$[0].firstName").value("Near"))
+                .andExpect(jsonPath("$[0].lastName").value("Doctor"))
+                .andExpect(jsonPath("$[0].address").value("Sofia"))
+                .andExpect(jsonPath("$[0].telephone").value("+359888000000"))
+                .andExpect(jsonPath("$[0].description").value("General practice"))
+                .andExpect(jsonPath("$[0].distanceKm").value(0.0))
+                .andExpect(jsonPath("$[1].egn").value("2000000001"));
+
+        verify(userManagementService, times(1)).getNearbyDoctors("user@enterprise.com");
     }
 }
