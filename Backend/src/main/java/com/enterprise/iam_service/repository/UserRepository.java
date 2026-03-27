@@ -3,11 +3,10 @@ package com.enterprise.iam_service.repository;
 import com.enterprise.iam_service.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.List;
 
-// ? JpaRepository<User, UUID>: Inherits full CRUD functionality for the User entity using UUID as the ID type.
-public interface UserRepository extends JpaRepository<User, UUID> {
+// ? JpaRepository<User, String>: Inherits full CRUD functionality for the User entity using EGN as the ID type.
+public interface UserRepository extends JpaRepository<User, String> {
 
     // * Query Method: Derived by Spring Data to find a user record by their unique email address.
     // ? Optional<User>: Safely handles cases where a user might not exist without returning null.

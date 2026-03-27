@@ -56,7 +56,6 @@ public class UserManagementService {
             user.getEmail(),
             user.getStatus(),
             roles,
-            user.getLastLoginAt(),
             user.getCreatedAt()
         );
     }

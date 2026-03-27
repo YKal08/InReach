@@ -8,6 +8,5 @@ public record UserProfileResponse(
     String email, 
     String status,
     Set<String> roles,
-    LocalDateTime lastLogin,
     LocalDateTime createdAt
 ) {}
