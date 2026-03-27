@@ -17,7 +17,7 @@ import jakarta.validation.constraints.Min;
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @Builder
-public class Request {
+public class VisitRequest {
 
     // * Primary Key: UUID aligns with the User model for consistency and distributed-system safety.
     @Id
@@ -60,5 +60,10 @@ public class Request {
     // * Audit: Automatically updates whenever the request state changes.
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_doctor_id")
+    @Builder.Default
+    private User assignedDoctor = null;   // set by DispatchService, null until assigned
 
 }

@@ -28,7 +28,23 @@ public class DataInitializer implements CommandLineRunner {
             // * Initialize the system's core Administrative Role.
             Role adminRole = new Role();
             adminRole.setName("ADMIN");
+            adminRole.setDescription("Full system access");
             roleRepository.save(adminRole);
+
+            Role patientRole = new Role();
+            patientRole.setName("PATIENT");
+            patientRole.setDescription("Can submit visit requests and view prescriptions");
+            roleRepository.save(patientRole);
+
+            Role doctorRole = new Role();
+            doctorRole.setName("DOCTOR");
+            doctorRole.setDescription("Can view assigned routes and issue prescriptions");
+            roleRepository.save(doctorRole);
+
+            Role driverRole = new Role();
+            driverRole.setName("DRIVER");
+            driverRole.setDescription("Can view and complete delivery orders");
+            roleRepository.save(driverRole);
 
             // * Seed the initial system administrator if they don't exist.
             if (userRepository.findByEmail("admin@enterprise.com").isEmpty()) {
@@ -36,11 +52,16 @@ public class DataInitializer implements CommandLineRunner {
                 // ! SECURITY ALERT: Default credentials used for first-time setup. 
                 // ! Change password immediately after first login.
                 User admin = User.builder()
-                        .email("admin@enterprise.com")
-                        .passwordHash(passwordEncoder.encode("admin123")) // ! BCrypt hashing applied here
-                        .status("ACTIVE")
-                        .roles(Set.of(adminRole))
-                        .build();
+                    .egn("0000000000")
+                    .firstName("System")
+                    .lastName("Administrator")
+                    .address("Enterprise HQ")
+                    .telephone("+359000000000")
+                    .email("admin@enterprise.com")
+                    .passwordHash(passwordEncoder.encode("admin123"))
+                    .status("ACTIVE")
+                    .roles(Set.of(adminRole))
+                    .build();
                 
                 userRepository.save(admin);
                 
