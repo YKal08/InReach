@@ -17,4 +17,6 @@ public interface DriverScheduleRepository extends JpaRepository<DriverSchedule, 
  
     // * Returns all pharmacists covering a specific delivery zone today.
     List<DriverSchedule> findByDeliveryZone(String deliveryZone);
+    
+    List<DriverSchedule> findByPharmacist(User pharmacist);
 }
