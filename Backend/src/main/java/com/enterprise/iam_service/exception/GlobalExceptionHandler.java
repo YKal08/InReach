@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -44,6 +45,23 @@ public class GlobalExceptionHandler {
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
     }
+
+        @ExceptionHandler(HttpMessageNotReadableException.class)
+        public ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
+                String message = "Required request body is missing or malformed JSON.";
+
+                if (ex.getMessage() != null && ex.getMessage().contains("Required request body is missing")) {
+                        message = "Required request body is missing.";
+                }
+
+                return ResponseEntity
+                                .status(HttpStatus.BAD_REQUEST)
+                                .body(new ErrorResponse(
+                                                HttpStatus.BAD_REQUEST.value(),
+                                                message,
+                                                LocalDateTime.now()
+                                ));
+        }
 
     // * Catches @PreAuthorize failures — user is authenticated but lacks the role.
     // ! Returns 403 Forbidden instead of leaking a stack trace.
