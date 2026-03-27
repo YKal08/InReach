@@ -64,7 +64,7 @@ class UserManagementServiceIntegrationTest {
                 .egn("3000000000")
                 .firstName("Doc")
                 .lastName("User")
-                .address("Sofia")
+            .rawAddress("Sofia")
                 .telephone("+359000000001")
                 .email("doc@enterprise.com")
                 .passwordHash(passwordEncoder.encode("StrongPass1"))
@@ -76,7 +76,7 @@ class UserManagementServiceIntegrationTest {
                 .egn("3000000001")
                 .firstName("Patient")
                 .lastName("User")
-                .address("Sofia")
+            .rawAddress("Sofia")
                 .telephone("+359000000002")
                 .email("patient@enterprise.com")
                 .passwordHash(passwordEncoder.encode("StrongPass1"))
@@ -169,7 +169,7 @@ class UserManagementServiceIntegrationTest {
         User reloaded = userRepository.findByEmail("doc-updated@enterprise.com").orElseThrow();
         assertEquals("DoctorUpdated", reloaded.getFirstName());
         assertEquals("UserUpdated", reloaded.getLastName());
-        assertEquals("Burgas", reloaded.getAddress());
+        assertEquals("Burgas", reloaded.getRawAddress());
         assertEquals("+359000000088", reloaded.getTelephone());
         assertEquals("Updated doctor description", reloaded.getDescription());
         }

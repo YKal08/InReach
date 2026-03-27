@@ -13,6 +13,11 @@ image:
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 
+# Environment configuration
+env:
+  # API URL for the frontend to use
+  VITE_API_URL: "http://backend-backend-chart:8080"
+
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
 # This is to override the chart name.

@@ -19,6 +19,7 @@ public class UserManagementService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthService authService;
+    private final GoogleGeocodingService googleGeocodingService;
 
     private boolean isDoctor(User user) {
         return user.getRoles().stream()
@@ -59,7 +60,7 @@ public class UserManagementService {
             user.getEgn(),
             user.getFirstName(),
             user.getLastName(),
-            user.getAddress(),
+            user.getRawAddress(),
             user.getTelephone(),
             user.getEmail(),
             doctor ? user.getDescription() : null,
@@ -78,7 +79,7 @@ public class UserManagementService {
             user.setLastName(request.lastName());
         }
         if (request.address() != null) {
-            user.setAddress(request.address());
+            googleGeocodingService.geocodeAndApplyToUser(user, request.address());
         }
         if (request.telephone() != null) {
             user.setTelephone(request.telephone());
