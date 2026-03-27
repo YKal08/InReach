@@ -17,7 +17,7 @@ public class JwtUtils {
 
     // Injected from application.properties → environment variables
     public JwtUtils(
-            @Value("${app.jwt.secret}") String jwtSecret,
+            @Value("${app.jwt.secret:ThisIsAVeryLongJwtSecretKeyForDevelopment1234567890}") String jwtSecret,
             @Value("${app.jwt.expiration-ms:3600000}") long expirationMs) {
 
         if (jwtSecret == null || jwtSecret.length() < 32) {
