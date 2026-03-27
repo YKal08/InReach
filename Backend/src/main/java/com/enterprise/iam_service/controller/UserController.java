@@ -1,8 +1,11 @@
 package com.enterprise.iam_service.controller;
 
+import com.enterprise.iam_service.dto.DoctorDescriptionUpdateRequest;
 import com.enterprise.iam_service.dto.PasswordChangeRequest;
 import com.enterprise.iam_service.dto.UserProfileResponse;
+import com.enterprise.iam_service.dto.UserProfileUpdateRequest;
 import com.enterprise.iam_service.service.UserManagementService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,6 +32,13 @@ public class UserController {
         return ResponseEntity.ok(userManagementService.getUserProfile(email));
     }
 
+    @PatchMapping("/me")
+    public ResponseEntity<String> updateMyProfile(@RequestBody @Valid UserProfileUpdateRequest request) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        userManagementService.updateProfileByEmail(email, request);
+        return ResponseEntity.ok("Profile updated successfully");
+    }
+
     // * Endpoint: Allows users to rotate their credentials while logged in.
     @PostMapping("/change-password")
     public ResponseEntity<String> changePassword(@RequestBody PasswordChangeRequest request) {
@@ -39,6 +49,13 @@ public class UserController {
         userManagementService.changePasswordByEmail(email, request.oldPassword(), request.newPassword());
         
         return ResponseEntity.ok("Password updated successfully");
+    }
+
+    @PatchMapping("/me/description")
+    public ResponseEntity<String> updateDoctorDescription(@RequestBody @Valid DoctorDescriptionUpdateRequest request) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        userManagementService.updateDoctorDescriptionByEmail(email, request.description());
+        return ResponseEntity.ok("Description updated successfully");
     }
 
 }

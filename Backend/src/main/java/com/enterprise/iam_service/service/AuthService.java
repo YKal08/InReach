@@ -39,8 +39,8 @@ public class AuthService {
         // ! SECURITY: Enforces the organization's password complexity rules before proceeding.
         validatePasswordStrength(request.password());
 
-        Role patientRole = roleRepository.findByName("PATIENT")
-            .orElseThrow(() -> new RuntimeException("PATIENT role is not configured"));
+        Role patientRole = roleRepository.findByName("Patient")
+            .orElseThrow(() -> new RuntimeException("Patient role is not configured"));
 
         // * Step 2: Assemble the User object. 
         // ! SECURITY: The password is encrypted using BCrypt immediately via passwordEncoder.encode().

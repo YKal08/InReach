@@ -7,8 +7,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 
 // ? @Entity: Defines this class as a JPA entity mapped to the 'requests' table.
 // ? @Builder, @Getter, @Setter etc. reduce boilerplate via Lombok.
@@ -39,12 +37,6 @@ public class VisitRequest {
     @Column(name = "doctor_type", nullable = false)
     private String doctorType;
 
-    // * Priority tier for route optimization (e.g., 1 = Critical, 2 = Urgent, 3 = Routine).
-    @Column(nullable = false)
-    @Builder.Default
-     @Min(1) @Max(3)
-    private Integer priority = 3;
-
     // * Lifecycle status: PENDING → IN_PROGRESS → COMPLETED / CANCELLED.
     @Builder.Default
     private String status = "PENDING";
@@ -53,6 +45,11 @@ public class VisitRequest {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
+    // * Doctor selected by the patient in the UI.
+    // ! Stored as EGN so requests are tied directly to a doctor identity.
+    @Column(name = "doctor_egn", nullable = false)
+    private String doctorEgn;
+
     // * Audit: Automatically captures when the request was submitted.
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -60,10 +57,5 @@ public class VisitRequest {
     // * Audit: Automatically updates whenever the request state changes.
     @UpdateTimestamp
     private LocalDateTime updatedAt;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "assigned_doctor_id")
-    @Builder.Default
-    private User assignedDoctor = null;   // set by DispatchService, null until assigned
 
 }

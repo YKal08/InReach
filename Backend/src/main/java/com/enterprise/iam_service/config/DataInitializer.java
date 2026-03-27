@@ -23,26 +23,26 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
         // * Logic check: Prevent duplicate roles by verifying if "ADMIN" already exists in the DB.
-        if (roleRepository.findByName("ADMIN").isEmpty()) {
+        if (roleRepository.findByName("Admin").isEmpty()) {
             
             // * Initialize the system's core Administrative Role.
             Role adminRole = new Role();
-            adminRole.setName("ADMIN");
+            adminRole.setName("Admin");
             adminRole.setDescription("Full system access");
             roleRepository.save(adminRole);
 
             Role patientRole = new Role();
-            patientRole.setName("PATIENT");
+            patientRole.setName("Patient");
             patientRole.setDescription("Can submit visit requests and view prescriptions");
             roleRepository.save(patientRole);
 
             Role doctorRole = new Role();
-            doctorRole.setName("DOCTOR");
+            doctorRole.setName("Doctor");
             doctorRole.setDescription("Can view assigned routes and issue prescriptions");
             roleRepository.save(doctorRole);
 
             Role driverRole = new Role();
-            driverRole.setName("DRIVER");
+            driverRole.setName("Driver");
             driverRole.setDescription("Can view and complete delivery orders");
             roleRepository.save(driverRole);
 
