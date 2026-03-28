@@ -29,7 +29,7 @@ interface RoleUpdateResponse {
 const DEFAULT_ROLE = "";
 
 export default function AdminRoute() {
-  const { isLoading: authLoading } = useRoleGuard("any");
+  const { isLoading: authLoading } = useRoleGuard("ADMIN");
   const { user } = useAuth();
 
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -46,7 +46,6 @@ export default function AdminRoute() {
   const [newRoleDescription, setNewRoleDescription] = useState("");
 
   const currentUserRoles = useMemo(() => extractRoleNames(user?.roles as RoleLike[] | undefined), [user?.roles]);
-  const knownNonAdmin = currentUserRoles.length > 0 && !currentUserRoles.includes("ADMIN");
 
   const clearBanners = () => {
     setError("");
@@ -85,9 +84,8 @@ export default function AdminRoute() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (knownNonAdmin) return;
     loadData();
-  }, [authLoading, knownNonAdmin]);
+  }, [authLoading]);
 
   const normalizedUsers = useMemo(() => {
     return users.map((u) => ({
@@ -185,20 +183,6 @@ export default function AdminRoute() {
   };
 
   if (authLoading) return null;
-
-  if (knownNonAdmin) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <div className="max-w-3xl mx-auto px-4 py-16">
-          <div className="bg-white border border-red-200 text-red-700 rounded-xl p-6">
-            <h1 className="text-2xl font-bold mb-2">Admin access required</h1>
-            <p className="text-sm">Your account does not have the ADMIN role.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">

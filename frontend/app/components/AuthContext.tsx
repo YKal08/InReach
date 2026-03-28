@@ -9,6 +9,7 @@ interface User {
   email: string;
   address: string;
   telephone: string;
+  description?: string;
   status: "ACTIVE" | "PENDING" | "LOCKED";
   roles?: RoleLike[];
   doctor?: boolean;

@@ -17,7 +17,7 @@ export function meta() {
 
 export default function Profile() {
   const { isEasyMode } = useEasyMode();
-  const { user, token, refreshUser, registrationLocation, logout } = useAuth();
+  const { user, token, isDoctor, refreshUser, registrationLocation, logout } = useAuth();
   const navigate = useNavigate();
 
   const { isLoading: authLoading } = useRoleGuard("any");
@@ -28,6 +28,7 @@ export default function Profile() {
     email: user?.email ?? "",
     telephone: user?.telephone ?? "",
     address: registrationLocation?.address ?? "",
+    description: user?.description ?? "",
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -126,6 +127,7 @@ export default function Profile() {
         email: formData.email,
         telephone: formData.telephone || undefined,
         address: formData.address || undefined,
+        description: isDoctor ? (formData.description || "") : undefined,
       });
       await refreshUser();
       setSuccess(true);
@@ -211,6 +213,20 @@ export default function Profile() {
                 <label className="em-label">Адрес / Локация</label>
                 <LocationField isEasy />
               </div>
+              {isDoctor && (
+                <div className="em-full-width">
+                  <label htmlFor="em-description" className="em-label">Професионално описание</label>
+                  <textarea
+                    id="em-description"
+                    name="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+                    rows={4}
+                    placeholder="Опишете вашия опит, специалност и подход към пациентите..."
+                    className="em-input min-h-28 resize-y"
+                  />
+                </div>
+              )}
               <div className="em-full-width">
                 <button
                   type="submit"
@@ -477,6 +493,21 @@ export default function Profile() {
               <p className="text-xs text-gray-400 mb-2">Използва се, за да ви показваме най-близките лекари.</p>
               <LocationField />
             </div>
+
+            {isDoctor && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Професионално описание</label>
+                <p className="text-xs text-gray-400 mb-2">Това описание се показва на картите в панела с лекари.</p>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+                  rows={4}
+                  placeholder="Опишете вашия опит, специалност и подход към пациентите..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--clr-accent)] transition resize-y"
+                />
+              </div>
+            )}
 
             <div className="pt-2 border-t border-gray-100 flex gap-3">
               <button
