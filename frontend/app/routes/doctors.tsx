@@ -7,6 +7,7 @@ import DoctorDetailModal from "../components/DoctorDetailModal";
 import { useRoleGuard } from "../utils/useRoleGuard";
 import { api } from "../utils/api";
 import { useAuth } from "../components/AuthContext";
+import { hasRole } from "../utils/roles";
 
 interface Doctor {
   id: number;
@@ -34,6 +35,11 @@ interface DoctorApiResponse {
   distanceKm: number;
 }
 
+interface AdminRoleResponse {
+  id: number;
+  name: string;
+}
+
 export function meta({ }: Route.MetaArgs) {
   return [
     { title: "Нашите специалисти - InReach" },
@@ -44,6 +50,7 @@ export function meta({ }: Route.MetaArgs) {
 const DEFAULT_SPECIALTY = "Лекар";
 const DEFAULT_AVAILABILITY = "Няма наличен график";
 const DEFAULT_EMAIL = "Няма публичен имейл";
+const EXCLUDED_FILTER_ROLES = new Set(["PATIENT", "DRIVER", "ADMIN"]);
 
 function toDoctor(apiDoctor: DoctorApiResponse, index: number): Doctor {
   const name = `${apiDoctor.firstName ?? ""} ${apiDoctor.lastName ?? ""}`.trim() || "Неизвестен лекар";
@@ -74,6 +81,7 @@ export default function Doctors() {
   const [selectedLocation, setSelectedLocation] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [allDoctors, setAllDoctors] = useState<Doctor[]>([]);
+  const [availableRoleFilters, setAvailableRoleFilters] = useState<string[]>([]);
   const [isDoctorsLoading, setIsDoctorsLoading] = useState(true);
   const [doctorsError, setDoctorsError] = useState<string | null>(null);
   const [requestError, setRequestError] = useState<string | null>(null);
@@ -105,11 +113,38 @@ export default function Doctors() {
     loadDoctors();
   }, [loadDoctors]);
 
+  useEffect(() => {
+    const loadRoleFilters = async () => {
+      if (!hasRole(user?.roles, "ADMIN")) {
+        setAvailableRoleFilters([]);
+        return;
+      }
+
+      try {
+        const roles = await api.get<AdminRoleResponse[]>("/admin/roles");
+        const normalized = roles
+          .map((r) => (r.name || "").trim())
+          .filter(Boolean)
+          .filter((name) => !EXCLUDED_FILTER_ROLES.has(name.toUpperCase()));
+        setAvailableRoleFilters(Array.from(new Set(normalized)));
+      } catch {
+        // If roles endpoint is inaccessible for the current account, keep doctor-only filters.
+        setAvailableRoleFilters([]);
+      }
+    };
+
+    loadRoleFilters();
+  }, [user?.roles]);
+
   const doctorsWithDistance = useMemo(() => {
     return allDoctors;
   }, [allDoctors]);
 
-  const specialties = Array.from(new Set(allDoctors.map((d) => d.specialty))).sort();
+  const specialties = useMemo(() => {
+    const fromDoctors = allDoctors.map((d) => d.specialty).filter(Boolean);
+    const merged = Array.from(new Set([...fromDoctors, ...availableRoleFilters]));
+    return merged.sort((a, b) => a.localeCompare(b));
+  }, [allDoctors, availableRoleFilters]);
   const locations = Array.from(new Set(allDoctors.map((d) => d.location))).sort();
 
   const filteredDoctors = useMemo(() => {

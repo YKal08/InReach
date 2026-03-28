@@ -124,6 +124,14 @@ export default function Home() {
   const [myRequests, setMyRequests] = useState<VisitRequestSummary[]>([]);
   const [isMyRequestsLoading, setIsMyRequestsLoading] = useState(true);
 
+  const activeRequestsCount = useMemo(
+    () => myRequests.filter((request) => {
+      const normalized = request.status?.toUpperCase();
+      return normalized !== "CANCELLED" && normalized !== "CANCELED";
+    }).length,
+    [myRequests]
+  );
+
   const doctorTypes = ["General Practitioner", "Pediatrician", "Cardiologist", "Dermatologist", "Orthopedic Surgeon", "Neurologist", "Psychiatrist", "Dentist", "Eye Specialist", "ENT Specialist"];
 
   useEffect(() => {
@@ -374,7 +382,7 @@ export default function Home() {
             <h2 className="text-xl font-bold text-gray-900 mb-2">
               {isMyRequestsLoading
                 ? "..."
-                : `${myRequests.length} заявк${myRequests.length !== 1 ? "и" : "а"}`}
+                : `${activeRequestsCount} заявк${activeRequestsCount !== 1 ? "и" : "а"}`}
             </h2>
             <p className="text-sm text-gray-600 mb-6 grow">Проследете статуса на подадените от вас заявки.</p>
             <Link to="/pending-requests" className="block w-full bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors duration-200 text-center">

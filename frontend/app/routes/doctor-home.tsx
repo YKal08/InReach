@@ -1,9 +1,10 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { useEasyMode } from "../components/EasyModeContext";
 import { calculateDistance } from "../utils/distance";
 import GoogleMapsModal from "../components/GoogleMapsModal";
 import { useRoleGuard } from "../utils/useRoleGuard";
+import { api } from "../utils/api";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface VisitRequest {
@@ -28,6 +29,43 @@ const DAY_LABELS: Record<DayKey, string> = {
   Saturday: "Събота",
   Sunday: "Неделя",
 };
+
+const DAY_TO_NUMBER: Record<DayKey, number> = {
+  Monday: 1,
+  Tuesday: 2,
+  Wednesday: 3,
+  Thursday: 4,
+  Friday: 5,
+  Saturday: 6,
+  Sunday: 7,
+};
+
+const NUMBER_TO_DAY: Record<number, DayKey> = {
+  1: "Monday",
+  2: "Tuesday",
+  3: "Wednesday",
+  4: "Thursday",
+  5: "Friday",
+  6: "Saturday",
+  7: "Sunday",
+};
+
+interface DoctorScheduleResponse {
+  id: string;
+  dayOfWeek: number;
+  specificDate: string | null;
+  workStart: string | null;
+  workEnd: string | null;
+  acceptingRequests: boolean | null;
+  updatedAt: string | null;
+}
+
+interface DoctorScheduleRequest {
+  dayOfWeek: number;
+  workStart: string | null;
+  workEnd: string | null;
+  acceptingRequests: boolean;
+}
 
 const INITIAL_REQUESTS: VisitRequest[] = [
   { id: 1, patientName: "Иван Иванов",    address: "Пловдив",        situation: "Висока температура и кашлица от 3 дни, температура 39.5°C.",     lat: 42.1352, lng: 24.7452, status: "pending" },
@@ -56,6 +94,25 @@ const DEFAULT_SCHEDULE: Record<DayKey, { active: boolean; start: string; end: st
   Saturday:  { active: false, start: "10:00", end: "14:00" },
   Sunday:    { active: false, start: "10:00", end: "14:00" },
 };
+
+const EMPTY_SCHEDULE: Record<DayKey, { active: boolean; start: string; end: string }> = {
+  Monday:    { active: false, start: "09:00", end: "17:00" },
+  Tuesday:   { active: false, start: "09:00", end: "17:00" },
+  Wednesday: { active: false, start: "09:00", end: "17:00" },
+  Thursday:  { active: false, start: "09:00", end: "17:00" },
+  Friday:    { active: false, start: "09:00", end: "17:00" },
+  Saturday:  { active: false, start: "10:00", end: "14:00" },
+  Sunday:    { active: false, start: "10:00", end: "14:00" },
+};
+
+function toTimeInput(value: string | null | undefined): string {
+  if (!value) return "09:00";
+  return value.slice(0, 5);
+}
+
+function toApiTime(value: string): string {
+  return value.length === 5 ? `${value}:00` : value;
+}
 
 // ── Route helpers ─────────────────────────────────────────────────────────────
 
@@ -153,7 +210,13 @@ export default function DoctorHome() {
   // Doctor-only guard — redirects patients to /home, guests to /login
   const { isLoading: authLoading } = useRoleGuard("DOCTOR");
 
-  const [schedule, setSchedule] = useState(DEFAULT_SCHEDULE);
+  const [schedule, setSchedule] = useState(EMPTY_SCHEDULE);
+  const [originalSchedule, setOriginalSchedule] = useState(EMPTY_SCHEDULE);
+  const [scheduleEntryIds, setScheduleEntryIds] = useState<Partial<Record<DayKey, string>>>({});
+  const [isScheduleLoading, setIsScheduleLoading] = useState(true);
+  const [isScheduleSaving, setIsScheduleSaving] = useState(false);
+  const [scheduleError, setScheduleError] = useState<string | null>(null);
+  const [scheduleSuccess, setScheduleSuccess] = useState<string | null>(null);
   const [editingSchedule, setEditingSchedule] = useState(false);
   const [requests, setRequests] = useState<VisitRequest[]>(INITIAL_REQUESTS);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -165,6 +228,57 @@ export default function DoctorHome() {
   const pending = useMemo(() => requests.filter((r) => r.status === "pending"), [requests]);
   const done    = useMemo(() => requests.filter((r) => r.status === "done"),    [requests]);
   const activeReq = activeIndex !== null ? requests[activeIndex] : null;
+
+  useEffect(() => {
+    const loadSchedule = async () => {
+      setIsScheduleLoading(true);
+      setScheduleError(null);
+
+      try {
+        const entries = await api.get<DoctorScheduleResponse[]>("/schedule/doctor/get");
+
+        const latestByDay = new Map<DayKey, DoctorScheduleResponse>();
+        for (const entry of entries) {
+          if (entry.specificDate) continue;
+          const day = NUMBER_TO_DAY[entry.dayOfWeek];
+          if (!day) continue;
+
+          const existing = latestByDay.get(day);
+          const entryDate = entry.updatedAt ? new Date(entry.updatedAt).getTime() : 0;
+          const existingDate = existing?.updatedAt ? new Date(existing.updatedAt).getTime() : 0;
+          if (!existing || entryDate >= existingDate) {
+            latestByDay.set(day, entry);
+          }
+        }
+
+        const nextSchedule: Record<DayKey, { active: boolean; start: string; end: string }> = { ...EMPTY_SCHEDULE };
+        const nextIds: Partial<Record<DayKey, string>> = {};
+
+        for (const day of DAYS) {
+          const entry = latestByDay.get(day);
+          if (!entry) continue;
+
+          nextIds[day] = entry.id;
+          nextSchedule[day] = {
+            active: Boolean(entry.acceptingRequests) && Boolean(entry.workStart) && Boolean(entry.workEnd),
+            start: toTimeInput(entry.workStart),
+            end: toTimeInput(entry.workEnd),
+          };
+        }
+
+        setSchedule(nextSchedule);
+        setOriginalSchedule(nextSchedule);
+        setScheduleEntryIds(nextIds);
+      } catch (error) {
+        console.error("Failed to load schedule:", error);
+        setScheduleError("Неуспешно зареждане на графика.");
+      } finally {
+        setIsScheduleLoading(false);
+      }
+    };
+
+    loadSchedule();
+  }, []);
 
   // ── Route actions ────────────────────────────────────────────────────────────
 
@@ -209,15 +323,96 @@ export default function DoctorHome() {
   const toggleDay = (day: DayKey) => setSchedule((p) => ({ ...p, [day]: { ...p[day], active: !p[day].active } }));
   const updateTime = (day: DayKey, f: "start" | "end", v: string) => setSchedule((p) => ({ ...p, [day]: { ...p[day], [f]: v } }));
 
+  const handleScheduleAction = async () => {
+    if (isScheduleSaving || isScheduleLoading) return;
+
+    if (!editingSchedule) {
+      setScheduleSuccess(null);
+      setScheduleError(null);
+      setEditingSchedule(true);
+      return;
+    }
+
+    setIsScheduleSaving(true);
+    setScheduleError(null);
+    setScheduleSuccess(null);
+
+    try {
+      const nextIds: Partial<Record<DayKey, string>> = { ...scheduleEntryIds };
+      const dayFailures: string[] = [];
+
+      for (const day of DAYS) {
+        const dayConfig = schedule[day];
+        const previousConfig = originalSchedule[day];
+        const existingId = nextIds[day];
+
+        const changed =
+          dayConfig.active !== previousConfig.active ||
+          dayConfig.start !== previousConfig.start ||
+          dayConfig.end !== previousConfig.end;
+
+        if (!changed) {
+          continue;
+        }
+
+        try {
+          if (dayConfig.active) {
+            const payload: DoctorScheduleRequest = {
+              dayOfWeek: DAY_TO_NUMBER[day],
+              workStart: toApiTime(dayConfig.start),
+              workEnd: toApiTime(dayConfig.end),
+              acceptingRequests: true,
+            };
+
+            if (existingId) {
+              await api.put<DoctorScheduleResponse>(`/schedule/doctor/update/${existingId}`, payload);
+            } else {
+              const created = await api.post<DoctorScheduleResponse>("/schedule/doctor/create", payload);
+              nextIds[day] = created.id;
+            }
+          } else if (existingId) {
+            // Keep the entry and only stop accepting requests to avoid orphaned inactive rows.
+            await api.put<DoctorScheduleResponse>(`/schedule/doctor/update/${existingId}`, {
+              dayOfWeek: DAY_TO_NUMBER[day],
+              acceptingRequests: false,
+            });
+          }
+        } catch (error: any) {
+          dayFailures.push(`${DAY_LABELS[day]}: ${error?.message || "Request failed"}`);
+        }
+      }
+
+      setScheduleEntryIds(nextIds);
+      setOriginalSchedule(schedule);
+      if (dayFailures.length > 0) {
+        setScheduleError(`Проблем при запазване: ${dayFailures.join(" | ")}`);
+        setScheduleSuccess(null);
+        return;
+      }
+
+      setEditingSchedule(false);
+      setScheduleSuccess("Графикът е запазен успешно.");
+    } catch (error: any) {
+      console.error("Failed to save schedule:", error);
+      if (error?.status === 403) {
+        setScheduleError("Нямате права за тази операция (403). Проверете дали сте в Doctor профил.");
+      } else {
+        setScheduleError(error?.message || "Неуспешно запазване на графика.");
+      }
+    } finally {
+      setIsScheduleSaving(false);
+    }
+  };
+
   // ── Schedule day card ────────────────────────────────────────────────────────
   function NormalDayCard({ day }: { day: DayKey }) {
     return (
-      <div className={`rounded-lg border p-3 ${schedule[day].active ? "border-[var(--clr-accent)] bg-[var(--clr-accent-light)]/30" : "border-gray-100 bg-gray-50 opacity-60"}`}>
+      <div className={`rounded-lg border p-3 ${schedule[day].active ? "border-(--clr-accent) bg-(--clr-accent-light)/30" : "border-gray-100 bg-gray-50 opacity-60"}`}>
         <div className="flex items-center gap-1.5 mb-2">
           <button
             type="button"
             onClick={() => editingSchedule && toggleDay(day)}
-            className={`w-4 h-4 rounded border shrink-0 flex items-center justify-center ${schedule[day].active ? "bg-[var(--clr-primary)] border-[var(--clr-primary)]" : "border-gray-300"} ${editingSchedule ? "cursor-pointer" : "cursor-default"}`}
+            className={`w-4 h-4 rounded border shrink-0 flex items-center justify-center ${schedule[day].active ? "bg-(--clr-primary) border-(--clr-primary)" : "border-gray-300"} ${editingSchedule ? "cursor-pointer" : "cursor-default"}`}
           >
             {schedule[day].active && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
           </button>
@@ -225,11 +420,11 @@ export default function DoctorHome() {
         </div>
         {editingSchedule && schedule[day].active ? (
           <div className="space-y-1" onClick={(e) => e.stopPropagation()}>
-            <input type="time" value={schedule[day].start} onChange={(e) => updateTime(day, "start", e.target.value)} className="w-full text-[10px] border border-gray-300 rounded px-1 py-0.5 text-center focus:outline-none focus:ring-1 focus:ring-[var(--clr-accent)]" />
-            <input type="time" value={schedule[day].end} onChange={(e) => updateTime(day, "end", e.target.value)} className="w-full text-[10px] border border-gray-300 rounded px-1 py-0.5 text-center focus:outline-none focus:ring-1 focus:ring-[var(--clr-accent)]" />
+            <input type="time" value={schedule[day].start} onChange={(e) => updateTime(day, "start", e.target.value)} className="w-full text-[10px] border border-gray-300 rounded px-1 py-0.5 text-center focus:outline-none focus:ring-1 focus:ring-(--clr-accent)" />
+            <input type="time" value={schedule[day].end} onChange={(e) => updateTime(day, "end", e.target.value)} className="w-full text-[10px] border border-gray-300 rounded px-1 py-0.5 text-center focus:outline-none focus:ring-1 focus:ring-(--clr-accent)" />
           </div>
         ) : (
-          <p className={`text-[10px] font-medium leading-tight text-center ${schedule[day].active ? "text-[var(--clr-primary)]" : "text-gray-400"}`}>
+          <p className={`text-[10px] font-medium leading-tight text-center ${schedule[day].active ? "text-(--clr-primary)" : "text-gray-400"}`}>
             {schedule[day].active ? `${schedule[day].start}–${schedule[day].end}` : "Почивка"}
           </p>
         )}
@@ -250,16 +445,24 @@ export default function DoctorHome() {
           <section className="em-card">
             <div className="flex justify-between items-center mb-4">
               <h1 className="em-heading" style={{ marginBottom: 0 }}>Седмичен график</h1>
-              <button onClick={() => setEditingSchedule(!editingSchedule)} className="em-btn-primary" style={{ padding: "10px 20px", fontSize: "16px" }}>
-                {editingSchedule ? "Запази" : "Редактирай"}
+              <button
+                onClick={() => void handleScheduleAction()}
+                disabled={isScheduleSaving || isScheduleLoading}
+                className="em-btn-primary disabled:opacity-60"
+                style={{ padding: "10px 20px", fontSize: "16px" }}
+              >
+                {isScheduleSaving ? "Запазване..." : editingSchedule ? "Запази" : "Редактирай"}
               </button>
             </div>
+            {isScheduleLoading && <p className="em-body text-gray-500 mb-3">Зареждане на графика...</p>}
+            {scheduleError && <p className="em-body text-red-600 mb-3">{scheduleError}</p>}
+            {scheduleSuccess && <p className="em-body text-green-600 mb-3">{scheduleSuccess}</p>}
             <div className="divide-y divide-gray-100">
               {DAYS.map((day) => (
                 <div key={day} className="flex items-center gap-4 py-3">
                   <button
                     type="button"
-                    onClick={() => editingSchedule && toggleDay(day)}
+                    onClick={() => editingSchedule && !isScheduleSaving && !isScheduleLoading && toggleDay(day)}
                     className={`w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 ${schedule[day].active ? "bg-(--clr-primary) border-(--clr-primary)" : "border-gray-300"} ${editingSchedule ? "cursor-pointer" : "cursor-default"}`}
                   >
                     {schedule[day].active && <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
@@ -298,7 +501,7 @@ export default function DoctorHome() {
                   key={req.id}
                   className={`border-2 rounded-xl p-5 flex items-center gap-4 ${req.status === "done" ? "border-gray-100 bg-gray-50 opacity-50" : activeIndex === idx ? "border-(--clr-primary) bg-(--clr-accent-light)/30" : "border-(--clr-accent)"}`}
                 >
-                  <div className="flex-grow">
+                  <div className="grow">
                     <div className="flex justify-between items-center">
                       <span className="em-body font-bold" style={{ marginBottom: 0 }}>{req.patientName}</span>
                       {req.status === "done"
@@ -370,12 +573,16 @@ export default function DoctorHome() {
                 <h2 className="text-xl font-bold text-gray-900">Седмичен график</h2>
               </div>
               <button
-                onClick={() => setEditingSchedule(!editingSchedule)}
-                className="bg-[var(--clr-primary)] text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-[var(--clr-primary-hover)] transition-colors duration-200"
+                onClick={() => void handleScheduleAction()}
+                disabled={isScheduleSaving || isScheduleLoading}
+                className="bg-(--clr-primary) text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-(--clr-primary-hover) transition-colors duration-200 disabled:opacity-60"
               >
-                {editingSchedule ? "Запази графика" : "Редактирай графика"}
+                {isScheduleSaving ? "Запазване..." : editingSchedule ? "Запази графика" : "Редактирай графика"}
               </button>
             </div>
+            {isScheduleLoading && <p className="text-sm text-gray-500 mb-3">Зареждане на графика...</p>}
+            {scheduleError && <p className="text-sm text-red-600 mb-3">{scheduleError}</p>}
+            {scheduleSuccess && <p className="text-sm text-green-600 mb-3">{scheduleSuccess}</p>}
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
               {DAYS.map((day) => <NormalDayCard key={day} day={day} />)}
             </div>
@@ -387,7 +594,7 @@ export default function DoctorHome() {
             <h2 className="text-xl font-bold text-gray-900 mb-2">
               {pending.length} чакащ{pending.length !== 1 ? "и" : "а"} заявк{pending.length !== 1 ? "и" : "а"}
             </h2>
-            <p className="text-sm text-gray-600 mb-4 flex-grow">
+            <p className="text-sm text-gray-600 mb-4 grow">
               {done.length > 0 ? `${done.length} завършени днес. ` : ""}
               {pending.length > 0
                 ? "Натиснете Старт на маршрута за оптимизиран многоетапен маршрут в Google Maps."
@@ -396,7 +603,7 @@ export default function DoctorHome() {
             {pending.length > 0 && (
               <button
                 onClick={handleStartRoute}
-                className="block w-full bg-[var(--clr-primary)] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[var(--clr-primary-hover)] transition-colors duration-200 text-center text-sm"
+                className="block w-full bg-(--clr-primary) text-white px-6 py-3 rounded-lg font-semibold hover:bg-(--clr-primary-hover) transition-colors duration-200 text-center text-sm"
               >
                 {routeOptimized ? "Рестартирай маршрута" : "Старт на маршрута"}
               </button>
@@ -410,11 +617,11 @@ export default function DoctorHome() {
               <>
                 <h2 className="text-xl font-bold text-gray-900 mb-1">{activeReq.patientName}</h2>
                 <p className="text-sm text-gray-600 mb-1">{activeReq.address}</p>
-                <p className="text-xs text-gray-500 italic mb-4 flex-grow line-clamp-2">{activeReq.situation}</p>
+                <p className="text-xs text-gray-500 italic mb-4 grow line-clamp-2">{activeReq.situation}</p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleOpenPatientMap(activeReq, activeIndex!)}
-                    className="flex-1 bg-[var(--clr-primary)] text-white px-4 py-3 rounded-lg font-semibold hover:bg-[var(--clr-primary-hover)] transition-colors duration-200 text-sm"
+                    className="flex-1 bg-(--clr-primary) text-white px-4 py-3 rounded-lg font-semibold hover:bg-(--clr-primary-hover) transition-colors duration-200 text-sm"
                   >
                     Отвори карта
                   </button>
@@ -429,7 +636,7 @@ export default function DoctorHome() {
             ) : (
               <>
                 <h2 className="text-xl font-bold text-gray-900 mb-2">Няма активна спирка</h2>
-                <p className="text-sm text-gray-600 flex-grow">
+                <p className="text-sm text-gray-600 grow">
                   Натиснете <strong>Старт на маршрута</strong>, за да оптимизирате и започнете, или изберете посещение отдолу.
                 </p>
               </>
@@ -453,7 +660,7 @@ export default function DoctorHome() {
                   req.status === "done"
                     ? "bg-gray-50 border-gray-100 opacity-50"
                     : activeIndex === idx
-                    ? "border-[var(--clr-primary)] bg-[var(--clr-accent-light)]/20"
+                    ? "border-(--clr-primary) bg-(--clr-accent-light)/20"
                     : "border-gray-200 hover:border-gray-300"
                 }`}
               >
@@ -465,7 +672,7 @@ export default function DoctorHome() {
                 </div>
 
                 {/* Info */}
-                <div className="flex-grow min-w-0">
+                <div className="grow min-w-0">
                   <p className="font-semibold text-sm text-gray-900">{req.patientName}</p>
                   <p className="text-xs text-gray-500 truncate">{req.address}</p>
                   {activeIndex === idx && req.status !== "done" && (
@@ -483,7 +690,7 @@ export default function DoctorHome() {
                   <div className="flex items-center gap-2 shrink-0">
                     <button
                       onClick={() => handleOpenPatientMap(req, idx)}
-                      className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[var(--clr-primary)] text-white hover:bg-[var(--clr-primary-hover)] transition-colors"
+                      className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-(--clr-primary) text-white hover:bg-(--clr-primary-hover) transition-colors"
                     >
                       Навигация
                     </button>
