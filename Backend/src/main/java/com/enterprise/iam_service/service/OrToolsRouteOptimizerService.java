@@ -19,8 +19,20 @@ import java.util.List;
 @Slf4j
 public class OrToolsRouteOptimizerService {
 
-    static {
-        Loader.loadNativeLibraries();
+    private static final int INFINITE_TRAVEL_THRESHOLD = Integer.MAX_VALUE / 8;
+    private static final long NO_ASSIGNMENT_PENALTY = Long.MAX_VALUE / 8;
+    private static final boolean ORTOOLS_AVAILABLE = initOrTools();
+
+    private static boolean initOrTools() {
+        try {
+            Loader.loadNativeLibraries();
+            log.info("OR-Tools native libraries loaded successfully");
+            return true;
+        } catch (Throwable ex) {
+            log.warn("OR-Tools native libraries unavailable ({}: {}). Falling back to greedy optimizer.",
+                    ex.getClass().getSimpleName(), ex.getMessage());
+            return false;
+        }
     }
 
     public OptimizationResult optimize(
@@ -35,6 +47,27 @@ public class OrToolsRouteOptimizerService {
             return new OptimizationResult(List.of(), List.of());
         }
 
+        if (!ORTOOLS_AVAILABLE) {
+            return greedyFallback(travelSeconds, shiftStart, shiftEnd, visitDurationMinutes, dropPenalties);
+        }
+
+        try {
+            return optimizeWithOrTools(travelSeconds, shiftStart, shiftEnd, visitDurationMinutes, dropPenalties);
+        } catch (Throwable ex) {
+            log.warn("OR-Tools optimization failed at runtime. Falling back to greedy optimizer.", ex);
+            return greedyFallback(travelSeconds, shiftStart, shiftEnd, visitDurationMinutes, dropPenalties);
+        }
+    }
+
+    private OptimizationResult optimizeWithOrTools(
+            int[][] travelSeconds,
+            LocalTime shiftStart,
+            LocalTime shiftEnd,
+            int visitDurationMinutes,
+            int[] dropPenalties
+    ) {
+        int nodeCount = travelSeconds.length;
+
         RoutingIndexManager manager = new RoutingIndexManager(nodeCount, 1, 0);
         RoutingModel routing = new RoutingModel(manager);
 
@@ -45,8 +78,8 @@ public class OrToolsRouteOptimizerService {
             int toNode = manager.indexToNode(toIndex);
             int travel = travelSeconds[fromNode][toNode];
             int service = fromNode == 0 ? 0 : serviceSeconds;
-            if (travel >= Integer.MAX_VALUE / 8) {
-                return Integer.MAX_VALUE / 16;
+            if (travel >= INFINITE_TRAVEL_THRESHOLD) {
+                return NO_ASSIGNMENT_PENALTY;
             }
             return (long) travel + service;
         });
@@ -97,6 +130,65 @@ public class OrToolsRouteOptimizerService {
             orderedNodes.add(node);
             arrivals.add(shiftStart.plusSeconds(arrivalFromShiftStart));
             index = nextIndex;
+        }
+
+        return new OptimizationResult(orderedNodes, arrivals);
+    }
+
+    private OptimizationResult greedyFallback(
+            int[][] travelSeconds,
+            LocalTime shiftStart,
+            LocalTime shiftEnd,
+            int visitDurationMinutes,
+            int[] dropPenalties
+    ) {
+        int nodeCount = travelSeconds.length;
+        int serviceSeconds = Math.max(0, visitDurationMinutes) * 60;
+        long shiftBudget = Math.max(0, shiftEnd.toSecondOfDay() - shiftStart.toSecondOfDay());
+
+        boolean[] visited = new boolean[nodeCount];
+        int currentNode = 0;
+        long elapsed = 0;
+
+        List<Integer> orderedNodes = new ArrayList<>();
+        List<LocalTime> arrivals = new ArrayList<>();
+
+        while (true) {
+            int bestNode = -1;
+            int bestCost = Integer.MAX_VALUE;
+
+            for (int node = 1; node < nodeCount; node++) {
+                if (visited[node]) {
+                    continue;
+                }
+
+                int travel = travelSeconds[currentNode][node];
+                if (travel >= INFINITE_TRAVEL_THRESHOLD) {
+                    continue;
+                }
+
+                if (travel < bestCost) {
+                    bestCost = travel;
+                    bestNode = node;
+                }
+            }
+
+            if (bestNode == -1) {
+                break;
+            }
+
+            long arrivalOffset = elapsed + bestCost;
+            long departureOffset = arrivalOffset + serviceSeconds;
+
+            if (arrivalOffset > shiftBudget || departureOffset > shiftBudget) {
+                break;
+            }
+
+            orderedNodes.add(bestNode);
+            arrivals.add(shiftStart.plusSeconds(arrivalOffset));
+            visited[bestNode] = true;
+            currentNode = bestNode;
+            elapsed = departureOffset;
         }
 
         return new OptimizationResult(orderedNodes, arrivals);

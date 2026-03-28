@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router";
 import { useEasyMode } from "./EasyModeContext";
 import { useAuth } from "./AuthContext";
+import { hasRole } from "../utils/roles";
 
 export default function Navbar() {
   const { isEasyMode, toggleEasyMode } = useEasyMode();
@@ -13,7 +14,7 @@ export default function Navbar() {
 
   // Where "InReach" / "Home" links point
   const homeHref = !isAuthenticated ? "/" : isDoctor ? "/doctor-home" : "/home";
-  const isAdmin = user?.roles?.includes("ADMIN");
+  const isAdmin = hasRole(user?.roles, "ADMIN");
 
   return (
     <nav className="w-full bg-[var(--clr-nav)] border-b border-[var(--clr-nav-dark)] shadow-md">
@@ -41,6 +42,12 @@ export default function Navbar() {
           )}
           {isAdmin && !isEasyMode && (
             <>
+              <Link
+                to="/admin"
+                className="text-white hover:text-gray-200 font-medium transition py-1 hidden sm:inline text-sm"
+              >
+                Админ
+              </Link>
               <div className="h-5 w-px bg-white opacity-30" />
               <span className="text-yellow-300 text-xs font-bold px-2 py-1 bg-yellow-600 bg-opacity-30 rounded">ADMIN</span>
             </>
