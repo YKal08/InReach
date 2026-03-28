@@ -25,7 +25,7 @@ function statusClass(status: string): string {
   if (normalized === "ACCEPTED") return "bg-blue-100 text-blue-800";
   if (normalized === "IN_PROGRESS") return "bg-indigo-100 text-indigo-800";
   if (normalized === "COMPLETED") return "bg-emerald-100 text-emerald-800";
-  if (normalized === "CANCELLED") return "bg-gray-200 text-gray-700";
+  if (normalized === "CANCELLED" || normalized === "CANCELED") return "bg-gray-200 text-gray-700";
   return "bg-gray-100 text-gray-700";
 }
 
@@ -88,6 +88,14 @@ export default function PendingRequests() {
     });
   }, [requests]);
 
+  const activeRequestsCount = useMemo(
+    () => sortedRequests.filter((request) => {
+      const normalized = request.status?.toUpperCase();
+      return normalized !== "CANCELLED" && normalized !== "CANCELED";
+    }).length,
+    [sortedRequests]
+  );
+
   const handleCancel = async (requestId: string) => {
     setCancellingId(requestId);
     setError(null);
@@ -113,7 +121,7 @@ export default function PendingRequests() {
           <p className="text-gray-500 text-sm uppercase tracking-wide mb-2">Пациентски портал</p>
           <h1 className="text-3xl font-bold text-gray-900 mb-1">Моите заявки</h1>
           <p className="text-gray-600">
-            {sortedRequests.length} общо заявк{sortedRequests.length !== 1 ? "и" : "а"}
+            {activeRequestsCount} общо заявк{activeRequestsCount !== 1 ? "и" : "а"}
           </p>
         </div>
         {error && <p className="text-sm text-red-600 mb-4">{error}</p>}

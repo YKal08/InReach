@@ -41,8 +41,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Public: login and register
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/schedule/**").hasAnyRole("DOCTOR", "DRIVER")
-                .requestMatchers("/api/routes/**").hasAnyRole("DOCTOR", "DRIVER")
+                .requestMatchers("/api/schedule/**").hasAnyRole("Doctor", "Driver")
+                .requestMatchers("/api/routes/**").hasAnyRole("Doctor", "Driver")
                 .requestMatchers("/error").permitAll()
                 // Admin endpoints: require JWT authentication; @PreAuthorize enforces Admin role
                 .requestMatchers("/api/admin/**").authenticated()
