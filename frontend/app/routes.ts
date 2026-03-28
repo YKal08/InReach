@@ -11,5 +11,6 @@ export default [
   route("request-doctor", "routes/request-doctor.tsx"),
   route("pending-requests", "routes/pending-requests.tsx"),
   route("doctor-home", "routes/doctor-home.tsx"),
+  route("driver-home", "routes/driver-home.tsx"),
   route("profile", "routes/profile.tsx"),
 ] satisfies RouteConfig;

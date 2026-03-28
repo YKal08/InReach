@@ -346,8 +346,8 @@ public class RoutePlanningService {
     }
 
     private boolean hasRole(String role) {
-        return SecurityContextHolder.getContext().getAuthentication().getAuthorities()
-                .contains(new SimpleGrantedAuthority(role));
+        return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+            .anyMatch(auth -> auth.getAuthority() != null && auth.getAuthority().equalsIgnoreCase(role));
     }
 
     private String format24h(LocalTime time) {

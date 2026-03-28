@@ -32,6 +32,7 @@ interface AuthContextType {
   logout: () => void;
   isAuthenticated: boolean;
   isDoctor: boolean;
+  isDriver: boolean;
   registrationLocation: RegistrationLocation | null;
   refreshUser: () => Promise<void>;
 }
@@ -120,6 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const normalizedRoles = extractRoleNames(user?.roles);
   const isDoctor = normalizedRoles.some((r) => r.includes("DOCTOR")) || !!user?.doctor;
+  const isDriver = normalizedRoles.some((r) => r.includes("DRIVER"));
 
   const value: AuthContextType = {
     user,
@@ -130,6 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout,
     isAuthenticated: !!token && !!user,
     isDoctor,
+    isDriver,
     registrationLocation,
     refreshUser,
   };
