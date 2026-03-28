@@ -25,12 +25,12 @@ interface Doctor {
 }
 
 const ALL_DOCTORS: Doctor[] = [
-  { id: 1, name: "Dr. Maria Ivanova",       specialty: "General Medicine", location: "Sofia",   phone: "+359 (2) 123-4567",   email: "maria.ivanova@inreach.bg",      bio: "Experienced general practitioner with a passion for preventive care and patient education.",          availability: "Mon-Fri, 9AM-5PM",       image: "https://ui-avatars.com/api/?name=Maria+Ivanova&background=4a4699&color=fff&bold=true&size=200",       lat: 42.6977, lng: 23.3219 },
-  { id: 2, name: "Dr. Alexander Petrov",    specialty: "Cardiology",       location: "Plovdiv", phone: "+359 (32) 234-5678",  email: "alex.petrov@inreach.bg",        bio: "Specializing in cardiovascular diseases with advanced diagnostic expertise.",                          availability: "Tue-Sat, 10AM-6PM",      image: "https://ui-avatars.com/api/?name=Alexander+Petrov&background=4a4699&color=fff&bold=true&size=200",    lat: 42.1354, lng: 24.7453 },
-  { id: 3, name: "Dr. Elena Georgieva",     specialty: "Pediatrics",       location: "Varna",   phone: "+359 (52) 345-6789",  email: "elena.georgieva@inreach.bg",    bio: "Child health specialist dedicated to providing compassionate pediatric care.",                          availability: "Mon-Thu, 8AM-4PM",       image: "https://ui-avatars.com/api/?name=Elena+Georgieva&background=4a4699&color=fff&bold=true&size=200",     lat: 43.2141, lng: 27.9147 },
-  { id: 4, name: "Dr. Ivan Dimitrov",       specialty: "Orthopedics",      location: "Burgas",  phone: "+359 (56) 456-7890",  email: "ivan.dimitrov@inreach.bg",      bio: "Expert in bone and joint conditions with surgical and non-surgical treatment options.",                 availability: "Wed-Sun, 11AM-7PM",      image: "https://ui-avatars.com/api/?name=Ivan+Dimitrov&background=4a4699&color=fff&bold=true&size=200",      lat: 42.5048, lng: 27.4626 },
-  { id: 5, name: "Dr. Sofia Nikolova",      specialty: "Dermatology",      location: "Sofia",   phone: "+359 (2) 567-8901",   email: "sofia.nikolova@inreach.bg",     bio: "Skin health specialist providing diagnostic and therapeutic dermatological services.",                  availability: "Tue-Sat, 9AM-5PM",       image: "https://ui-avatars.com/api/?name=Sofia+Nikolova&background=4a4699&color=fff&bold=true&size=200",     lat: 42.6977, lng: 23.3219 },
-  { id: 6, name: "Dr. Yorgos Papadopoulos", specialty: "Neurology",       location: "Plovdiv", phone: "+359 (32) 678-9012",  email: "yorgos.papadopoulos@inreach.bg",bio: "Neurological disorders specialist with comprehensive diagnostic and treatment expertise.",                availability: "Mon, Wed, Fri, 9AM-3PM", image: "https://ui-avatars.com/api/?name=Yorgos+Papadopoulos&background=4a4699&color=fff&bold=true&size=200",lat: 42.1354, lng: 24.7453 },
+  { id: 1, name: "Д-р Мария Иванова",       specialty: "Обща медицина", location: "София",   phone: "+359 (2) 123-4567",   email: "maria.ivanova@inreach.bg",      bio: "Опитен общопрактикуващ лекар с фокус върху превенцията и здравната култура на пациентите.",          availability: "Пон-Пет, 09:00-17:00",       image: "https://ui-avatars.com/api/?name=Maria+Ivanova&background=4a4699&color=fff&bold=true&size=200",       lat: 42.6977, lng: 23.3219 },
+  { id: 2, name: "Д-р Александър Петров",    specialty: "Кардиология",       location: "Пловдив", phone: "+359 (32) 234-5678",  email: "alex.petrov@inreach.bg",        bio: "Специалист по сърдечно-съдови заболявания с богат опит в диагностика и лечение.",                          availability: "Вто-Съб, 10:00-18:00",      image: "https://ui-avatars.com/api/?name=Alexander+Petrov&background=4a4699&color=fff&bold=true&size=200",    lat: 42.1354, lng: 24.7453 },
+  { id: 3, name: "Д-р Елена Георгиева",     specialty: "Педиатрия",       location: "Варна",   phone: "+359 (52) 345-6789",  email: "elena.georgieva@inreach.bg",    bio: "Педиатър, посветен на грижата за детското здраве с внимание и човешко отношение.",                          availability: "Пон-Чет, 08:00-16:00",       image: "https://ui-avatars.com/api/?name=Elena+Georgieva&background=4a4699&color=fff&bold=true&size=200",     lat: 43.2141, lng: 27.9147 },
+  { id: 4, name: "Д-р Иван Димитров",       specialty: "Ортопедия",      location: "Бургас",  phone: "+359 (56) 456-7890",  email: "ivan.dimitrov@inreach.bg",      bio: "Експерт в лечението на ставни и костни проблеми чрез оперативни и неоперативни методи.",                 availability: "Сря-Нед, 11:00-19:00",      image: "https://ui-avatars.com/api/?name=Ivan+Dimitrov&background=4a4699&color=fff&bold=true&size=200",      lat: 42.5048, lng: 27.4626 },
+  { id: 5, name: "Д-р София Николова",      specialty: "Дерматология",      location: "София",   phone: "+359 (2) 567-8901",   email: "sofia.nikolova@inreach.bg",     bio: "Дерматолог, предоставящ диагностика и терапия при кожни заболявания.",                  availability: "Вто-Съб, 09:00-17:00",       image: "https://ui-avatars.com/api/?name=Sofia+Nikolova&background=4a4699&color=fff&bold=true&size=200",     lat: 42.6977, lng: 23.3219 },
+  { id: 6, name: "Д-р Йоргос Пападопулос", specialty: "Неврология",       location: "Пловдив", phone: "+359 (32) 678-9012",  email: "yorgos.papadopoulos@inreach.bg",bio: "Специалист по неврологични заболявания с комплексен подход към диагностика и лечение.",                availability: "Пон, Сря, Пет, 09:00-15:00", image: "https://ui-avatars.com/api/?name=Yorgos+Papadopoulos&background=4a4699&color=fff&bold=true&size=200",lat: 42.1354, lng: 24.7453 },
 ];
 
 const pendingRequests: any[] = [];
@@ -142,7 +142,7 @@ export default function Home() {
   const handleRequestSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!requestForm.doctorType || !requestForm.address.trim() || !requestForm.situation.trim()) {
-      alert("Please fill in all required fields.");
+      alert("Моля, попълнете всички задължителни полета.");
       return;
     }
     console.log("Request:", requestForm, selectedLocation);
@@ -162,13 +162,13 @@ export default function Home() {
         <Navbar />
         <div className="em-page">
           <div>
-            <h1 className="em-heading">Nearby Specialists</h1>
+            <h1 className="em-heading">Специалисти наблизо</h1>
             <p className="em-body">
               {locationStatus !== "loading"
                 ? locationStatus === "granted"
-                  ? `Showing doctors within ${maxDistance} km of your location.`
-                  : `Showing doctors within ${maxDistance} km of Sofia (location access denied).`
-                : "Detecting your location…"}
+                  ? `Показваме лекари в радиус от ${maxDistance} км от вашата локация.`
+                  : `Показваме лекари в радиус от ${maxDistance} км от София (достъпът до локация е отказан).`
+                : "Определяме вашата локация..."}
             </p>
           </div>
 
@@ -179,7 +179,7 @@ export default function Home() {
             </svg>
             <input
               type="text"
-              placeholder="Search by name or specialty…"
+              placeholder="Търсене по име или специалност…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="em-input border-0 focus:ring-0 flex-1"
@@ -196,13 +196,13 @@ export default function Home() {
 
           {/* Specialty filter — always visible */}
           <div className="em-card" style={{ padding: "16px 20px" }}>
-            <label className="em-label" style={{ fontSize: "16px", marginBottom: "8px" }}>Filter by Specialty</label>
+            <label className="em-label" style={{ fontSize: "16px", marginBottom: "8px" }}>Филтър по специалност</label>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setSelectedSpecialty("")}
                 className={`px-4 py-2 rounded-full text-base font-semibold border-2 transition-colors ${!selectedSpecialty ? "bg-(--clr-primary) text-white border-(--clr-primary)" : "border-(--clr-accent) text-(--clr-nav) hover:border-(--clr-primary)"}`}
               >
-                All
+                Всички
               </button>
               {specialties.map((s) => (
                 <button
@@ -220,12 +220,12 @@ export default function Home() {
           <div className="flex flex-col gap-4">
             {filteredDoctors.length === 0 ? (
               <div className="em-card text-center">
-                <p className="em-body text-gray-500">No doctors found. Try a different search or specialty.</p>
+                <p className="em-body text-gray-500">Няма намерени лекари. Опитайте различно търсене или специалност.</p>
                 <button
                   onClick={() => { setSearchQuery(""); setSelectedSpecialty(""); }}
                   className="em-btn-primary mt-4" style={{ padding: "12px 24px", fontSize: "16px" }}
                 >
-                  Clear Filters
+                  Изчисти филтрите
                 </button>
               </div>
             ) : filteredDoctors.map((doctor) => (
@@ -242,7 +242,7 @@ export default function Home() {
                   <div className="flex justify-between items-start mb-1">
                     <h2 className="em-subheading" style={{ marginBottom: 0 }}>{doctor.name}</h2>
                     {doctor.distance !== undefined && (
-                      <span className="em-body font-bold text-(--clr-primary-hover) shrink-0 ml-4" style={{ marginBottom: 0 }}>{doctor.distance.toFixed(1)} km</span>
+                      <span className="em-body font-bold text-(--clr-primary-hover) shrink-0 ml-4" style={{ marginBottom: 0 }}>{doctor.distance.toFixed(1)} км</span>
                     )}
                   </div>
                   <p className="inline-flex self-start px-3 py-1 rounded-full text-sm font-semibold bg-(--clr-accent-light) text-(--clr-primary-hover) mb-2 mt-1">{doctor.specialty}</p>
@@ -273,7 +273,7 @@ export default function Home() {
         {/* Profile header */}
         <div className="mb-10 pl-1">
           <h1 className="text-3xl font-bold text-gray-900 border-b-2 border-gray-100 pb-2 mb-1">
-            {user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : "Patient Dashboard"}
+            {user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : "Пациентски профил"}
           </h1>
           <p className="text-xs text-gray-400 font-medium tracking-widest opacity-60">
             EGN: {user?.egn || "0000000000"}
@@ -284,55 +284,55 @@ export default function Home() {
 
           {/* Last Checkup */}
           <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col min-h-[160px]">
-            <p className="text-gray-500 text-xs uppercase tracking-wide mb-2 font-bold">Health History</p>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Last Checkup</h2>
+            <p className="text-gray-500 text-xs uppercase tracking-wide mb-2 font-bold">Здравна история</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Последен преглед</h2>
             <div className="mt-auto">
               <p className="text-xs text-gray-400 italic leading-relaxed">
-                * This feature requires an established connection with the official Bulgarian healthcare system (HNIS).
+                * Тази функционалност изисква връзка с официалната българска здравна система (НЗИС).
               </p>
             </div>
           </div>
 
           {/* Condition Overview */}
           <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col min-h-[160px]">
-            <p className="text-gray-500 text-xs uppercase tracking-wide mb-2 font-bold">Health Summary</p>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Condition Overview</h2>
+            <p className="text-gray-500 text-xs uppercase tracking-wide mb-2 font-bold">Здравен статус</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Общ преглед на състоянието</h2>
             <div className="mt-auto">
               <p className="text-xs text-gray-400 italic leading-relaxed">
-                * Health status tracking requires integration with national healthcare databases.
+                * Проследяването на здравния статус изисква интеграция с национални здравни бази данни.
               </p>
             </div>
           </div>
 
           {/* Pending Requests */}
           <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col">
-            <p className="text-gray-500 text-xs uppercase tracking-wide mb-2 font-bold">Status Monitor</p>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">{pendingRequests.length} Request{pendingRequests.length !== 1 ? "s" : ""}</h2>
-            <p className="text-sm text-gray-600 mb-6 flex-grow">View the status of your submitted requests and track their progress.</p>
+            <p className="text-gray-500 text-xs uppercase tracking-wide mb-2 font-bold">Статус на заявки</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">{pendingRequests.length} заявк{pendingRequests.length !== 1 ? "и" : "а"}</h2>
+            <p className="text-sm text-gray-600 mb-6 flex-grow">Проследете статуса на подадените от вас заявки.</p>
             <Link to="/pending-requests" className="block w-full bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors duration-200 text-center">
-              View Requests
+              Виж заявките
             </Link>
           </div>
 
           {/* Browse Doctors */}
           <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col">
-            <p className="text-gray-500 text-xs uppercase tracking-wide mb-2 font-bold">Healthcare</p>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Find a Specialist</h2>
-            <p className="text-sm text-gray-600 mb-6 flex-grow">Browse doctors near you and send a visit request directly from their profile.</p>
+            <p className="text-gray-500 text-xs uppercase tracking-wide mb-2 font-bold">Здравни услуги</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Намери специалист</h2>
+            <p className="text-sm text-gray-600 mb-6 flex-grow">Разгледайте лекари близо до вас и изпратете заявка директно от профила им.</p>
             <Link to="/doctors" className="block w-full bg-[var(--clr-primary)] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[var(--clr-primary-hover)] transition-colors duration-200 text-center">
-              Browse Doctors
+              Разгледай лекари
             </Link>
           </div>
         </div>
 
         {/* Info */}
         <div className="bg-white border border-gray-200 p-8 rounded-lg shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-700 uppercase tracking-wide mb-4">InReach Information</h2>
+          <h2 className="text-lg font-semibold text-gray-700 uppercase tracking-wide mb-4">Информация за InReach</h2>
           <div className="space-y-3 text-gray-600 text-sm">
-            <p>All consultations are conducted by registered medical professionals with appropriate credentials and licensing.</p>
-            <p>Patient records are encrypted and stored securely in compliance with health data protection standards.</p>
-            <p>Medical consultations available across multiple specialties including general medicine, pediatrics, cardiology, dermatology, and more.</p>
-            <p>Response times vary based on specialist availability and case complexity. Standard assessment period: 24-48 hours.</p>
+            <p>Всички консултации се извършват от регистрирани медицински специалисти с необходимата квалификация и лиценз.</p>
+            <p>Пациентските данни са криптирани и съхранявани сигурно съгласно стандартите за защита на здравна информация.</p>
+            <p>Предлагат се консултации в множество специалности, включително обща медицина, педиатрия, кардиология, дерматология и други.</p>
+            <p>Времето за реакция зависи от наличността на специалистите и сложността на случая. Стандартен срок за оценка: 24-48 часа.</p>
           </div>
         </div>
       </div>

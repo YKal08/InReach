@@ -26,10 +26,10 @@ export default function PendingRequests() {
       <div className="max-w-5xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="mb-8">
-          <p className="text-gray-500 text-sm uppercase tracking-wide mb-2">Patient Portal</p>
-          <h1 className="text-3xl font-bold text-gray-900 mb-1">Pending Requests</h1>
+          <p className="text-gray-500 text-sm uppercase tracking-wide mb-2">Пациентски портал</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-1">Чакащи заявки</h1>
           <p className="text-gray-600">
-            {pendingRequests.length} pending request{pendingRequests.length !== 1 ? "s" : ""}
+            {pendingRequests.length} чакащ{pendingRequests.length !== 1 ? "и" : "а"} заявк{pendingRequests.length !== 1 ? "и" : "а"}
           </p>
         </div>
 
@@ -38,18 +38,18 @@ export default function PendingRequests() {
           to="/home"
           className="inline-block mb-8 text-[var(--clr-accent)] hover:text-[var(--clr-accent-muted)] font-medium transition-colors"
         >
-          ← Back to Home
+          ← Обратно към началото
         </Link>
 
         {/* Requests List */}
         {pendingRequests.length === 0 ? (
           <div className="bg-white border border-gray-200 p-12 rounded-lg shadow-sm text-center">
-            <p className="text-gray-600 mb-6">You have no pending requests at this time.</p>
+            <p className="text-gray-600 mb-6">Нямате чакащи заявки в момента.</p>
             <Link
               to="/doctors"
               className="inline-block bg-[var(--clr-primary)] text-white px-6 py-3 rounded-lg font-medium hover:bg-[var(--clr-primary-hover)] transition-colors"
             >
-              Make a New Request
+              Направи нова заявка
             </Link>
           </div>
         ) : (
@@ -65,7 +65,7 @@ export default function PendingRequests() {
                       {request.doctorType}
                     </h3>
                     <p className="text-sm text-gray-500">
-                      Submitted: {new Date(request.submittedDate).toLocaleDateString()}
+                      Подадена на: {new Date(request.submittedDate).toLocaleDateString()}
                     </p>
                   </div>
                   <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
@@ -76,20 +76,20 @@ export default function PendingRequests() {
                 <div className="mb-4 space-y-2">
                   <div>
                     <p className="text-sm text-gray-500 uppercase tracking-wide mb-1">
-                      Location
+                      Локация
                     </p>
                     <p className="text-gray-700">{request.address}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 uppercase tracking-wide mb-1">
-                      Situation
+                      Ситуация
                     </p>
                     <p className="text-gray-600">{request.situation}</p>
                   </div>
                 </div>
 
                 <button className="text-[var(--clr-accent)] hover:text-[var(--clr-accent-muted)] font-medium transition-colors">
-                  View Details →
+                  Виж детайли →
                 </button>
               </div>
             ))}
@@ -99,24 +99,20 @@ export default function PendingRequests() {
         {/* Information Section */}
         <div className="mt-12 bg-white border border-gray-200 p-8 rounded-lg shadow-sm">
           <h2 className="text-lg font-semibold text-gray-700 uppercase tracking-wide mb-4">
-            Request Status Information
+            Информация за статусите на заявка
           </h2>
           <div className="space-y-3 text-gray-600 text-sm">
             <p>
-              • <strong>Pending:</strong> Your request has been submitted and is waiting for a
-              doctor to review and accept it.
+              • <strong>Чакаща:</strong> Заявката е подадена и очаква лекар да я прегледа и приеме.
             </p>
             <p>
-              • <strong>Accepted:</strong> A doctor has reviewed and accepted your request. They
-              will contact you shortly to schedule a consultation.
+              • <strong>Приета:</strong> Лекар е прегледал и приел заявката ви. Скоро ще се свърже с вас за насрочване на консултация.
             </p>
             <p>
-              • <strong>In Progress:</strong> Your consultation is currently scheduled or in
-              progress.
+              • <strong>В процес:</strong> Консултацията ви е насрочена или се изпълнява в момента.
             </p>
             <p>
-              • <strong>Completed:</strong> Your consultation has been completed. You may request
-              a new consultation if needed.
+              • <strong>Завършена:</strong> Консултацията е приключила. При нужда можете да подадете нова заявка.
             </p>
           </div>
         </div>

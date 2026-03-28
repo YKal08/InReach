@@ -97,7 +97,7 @@ export default function GoogleRouteMap({
             onRouteOptimized(result.routes[0].waypoint_order);
           }
         } else {
-          setRouteError(`Could not calculate route: ${status}`);
+          setRouteError(`Маршрутът не може да бъде изчислен: ${status}`);
         }
       }
     );
@@ -114,7 +114,7 @@ export default function GoogleRouteMap({
   if (loadError) {
     return (
       <div className="flex items-center justify-center bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm font-medium" style={{ height }}>
-        Failed to load Google Maps. Check your API key.
+        Неуспешно зареждане на Google Maps. Проверете API ключа.
       </div>
     );
   }
@@ -126,7 +126,7 @@ export default function GoogleRouteMap({
           <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          Loading Google Maps…
+          Зареждане на Google Maps...
         </div>
       </div>
     );
@@ -148,7 +148,7 @@ export default function GoogleRouteMap({
         {/* Doctor origin marker */}
         <Marker
           position={origin}
-          title="Your location"
+          title="Вашата локация"
           icon={{
             url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`
               <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
@@ -209,7 +209,7 @@ export default function GoogleRouteMap({
             <svg className="w-4 h-4 animate-spin text-[var(--clr-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            Calculating optimal route…
+            Изчисляване на оптимален маршрут...
           </div>
         </div>
       )}

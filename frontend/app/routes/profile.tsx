@@ -10,8 +10,8 @@ const MapComponent = lazy(() => import("../components/MapPicker"));
 
 export function meta() {
   return [
-    { title: "Edit Profile - InReach" },
-    { name: "description", content: "Update your InReach profile" },
+    { title: "Редакция на профил - InReach" },
+    { name: "description", content: "Обновете своя InReach профил" },
   ];
 }
 
@@ -63,12 +63,12 @@ export default function Profile() {
     setPasswordError("");
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setPasswordError("New passwords do not match.");
+      setPasswordError("Новите пароли не съвпадат.");
       return;
     }
 
     if (passwordData.newPassword.length < 6) {
-      setPasswordError("Password must be at least 6 characters long.");
+      setPasswordError("Паролата трябва да е поне 6 символа.");
       return;
     }
 
@@ -82,7 +82,7 @@ export default function Profile() {
       setPasswordSuccess(true);
       setTimeout(() => setPasswordSuccess(false), 3000);
     } catch (err: any) {
-      setPasswordError(err.message || "Failed to change password. Please check your current password and try again.");
+      setPasswordError(err.message || "Неуспешна смяна на парола. Проверете текущата парола и опитайте отново.");
     } finally {
       setIsChangingPassword(false);
     }
@@ -131,7 +131,7 @@ export default function Profile() {
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
-      setError(err.message || "Failed to save changes. Please try again.");
+      setError(err.message || "Неуспешно запазване на промените. Опитайте отново.");
     } finally {
       setIsSaving(false);
     }
@@ -146,11 +146,11 @@ export default function Profile() {
         <Navbar />
         <div className="em-page">
           <section className="em-card">
-            <h1 className="em-heading">Edit Profile</h1>
-            <p className="em-body">Update your personal information below.</p>
+            <h1 className="em-heading">Редакция на профил</h1>
+            <p className="em-body">Обновете личната си информация по-долу.</p>
 
             {success && (
-              <div className="em-success">✓ Profile updated successfully!</div>
+              <div className="em-success">✓ Профилът е обновен успешно!</div>
             )}
             {error && (
               <div className="bg-red-100 border-2 border-red-500 text-red-700 p-4 rounded-xl mb-6 text-xl font-bold">
@@ -160,7 +160,7 @@ export default function Profile() {
 
             <form onSubmit={handleSubmit} className="em-form-grid">
               <div>
-                <label htmlFor="em-firstName" className="em-label">First Name</label>
+                <label htmlFor="em-firstName" className="em-label">Име</label>
                 <input
                   id="em-firstName"
                   type="text"
@@ -172,7 +172,7 @@ export default function Profile() {
                 />
               </div>
               <div>
-                <label htmlFor="em-lastName" className="em-label">Last Name</label>
+                <label htmlFor="em-lastName" className="em-label">Фамилия</label>
                 <input
                   id="em-lastName"
                   type="text"
@@ -184,7 +184,7 @@ export default function Profile() {
                 />
               </div>
               <div>
-                <label htmlFor="em-email" className="em-label">Email Address</label>
+                <label htmlFor="em-email" className="em-label">Имейл адрес</label>
                 <input
                   id="em-email"
                   type="email"
@@ -196,7 +196,7 @@ export default function Profile() {
                 />
               </div>
               <div>
-                <label htmlFor="em-telephone" className="em-label">Phone Number</label>
+                <label htmlFor="em-telephone" className="em-label">Телефонен номер</label>
                 <input
                   id="em-telephone"
                   type="tel"
@@ -208,7 +208,7 @@ export default function Profile() {
                 />
               </div>
               <div className="em-full-width">
-                <label className="em-label">Address / Location</label>
+                <label className="em-label">Адрес / Локация</label>
                 <LocationField isEasy />
               </div>
               <div className="em-full-width">
@@ -217,16 +217,16 @@ export default function Profile() {
                   className="em-btn-primary w-full disabled:opacity-50"
                   disabled={isSaving}
                 >
-                  {isSaving ? "Saving…" : "Save Changes"}
+                  {isSaving ? "Запазване..." : "Запази промените"}
                 </button>
               </div>
             </form>
 
             {/* Password Reset in Easy Mode */}
             <div className="mt-12 pt-8 border-t-2 border-gray-200">
-              <h2 className="em-heading">Change Password</h2>
+              <h2 className="em-heading">Смяна на парола</h2>
               {passwordSuccess && (
-                <div className="em-success">✓ Password changed successfully!</div>
+                <div className="em-success">✓ Паролата е сменена успешно!</div>
               )}
               {passwordError && (
                 <div className="bg-red-100 border-2 border-red-500 text-red-700 p-4 rounded-xl mb-6 text-xl font-bold">
@@ -235,40 +235,40 @@ export default function Profile() {
               )}
               <form onSubmit={handlePasswordSubmit} className="em-form-grid">
                 <div className="em-full-width">
-                  <label htmlFor="em-oldPassword" className="em-label">Current Password</label>
+                  <label htmlFor="em-oldPassword" className="em-label">Текуща парола</label>
                   <input
                     id="em-oldPassword"
                     type="password"
                     name="oldPassword"
                     value={passwordData.oldPassword}
                     onChange={handlePasswordChange}
-                    placeholder="Enter your current password"
+                    placeholder="Въведете текущата си парола"
                     className="em-input"
                     required
                   />
                 </div>
                 <div className="em-full-width">
-                  <label htmlFor="em-newPassword" className="em-label">New Password</label>
+                  <label htmlFor="em-newPassword" className="em-label">Нова парола</label>
                   <input
                     id="em-newPassword"
                     type="password"
                     name="newPassword"
                     value={passwordData.newPassword}
                     onChange={handlePasswordChange}
-                    placeholder="Enter new password (min. 6 characters)"
+                    placeholder="Въведете нова парола (мин. 6 символа)"
                     className="em-input"
                     required
                   />
                 </div>
                 <div className="em-full-width">
-                  <label htmlFor="em-confirmPassword" className="em-label">Confirm New Password</label>
+                  <label htmlFor="em-confirmPassword" className="em-label">Потвърди нова парола</label>
                   <input
                     id="em-confirmPassword"
                     type="password"
                     name="confirmPassword"
                     value={passwordData.confirmPassword}
                     onChange={handlePasswordChange}
-                    placeholder="Confirm new password"
+                    placeholder="Потвърдете новата парола"
                     className="em-input"
                     required
                   />
@@ -279,7 +279,7 @@ export default function Profile() {
                     className="em-btn-primary w-full disabled:opacity-50"
                     disabled={isChangingPassword}
                   >
-                    {isChangingPassword ? "Changing…" : "Change Password"}
+                    {isChangingPassword ? "Смяна..." : "Смени паролата"}
                   </button>
                 </div>
               </form>
@@ -305,7 +305,7 @@ export default function Profile() {
               name="address"
               value={formData.address}
               onChange={handleChange}
-              placeholder="Your address or city"
+              placeholder="Вашият адрес или град"
               className={inputCls}
             />
             {/* GPS button */}
@@ -313,7 +313,7 @@ export default function Profile() {
               type="button"
               onClick={handleAutoLocate}
               disabled={locating}
-              title="Use current location"
+              title="Използвай текущата локация"
               className="shrink-0 px-3 py-2 text-gray-500 hover:text-[var(--clr-primary)] border-l border-[var(--clr-accent)] transition-colors disabled:opacity-50"
             >
               {locating ? (
@@ -331,7 +331,7 @@ export default function Profile() {
             <button
               type="button"
               onClick={() => setShowMap(true)}
-              title="Pick on map"
+              title="Избери от карта"
               className="shrink-0 px-3 py-2 text-gray-500 hover:text-[var(--clr-primary)] border-l border-[var(--clr-accent)] transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -344,7 +344,7 @@ export default function Profile() {
             <Suspense
               fallback={
                 <div className="h-48 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-sm border border-dashed border-gray-300">
-                  Loading map…
+                  Зареждане на карта...
                 </div>
               }
             >
@@ -361,14 +361,14 @@ export default function Profile() {
                 onClick={() => { setShowMap(false); setPickedLocation(null); setFormData((p) => ({ ...p, address: "" })); }}
                 className="flex-1 border border-gray-300 text-gray-600 py-2 rounded-lg text-xs font-medium hover:bg-gray-50 transition-colors"
               >
-                Clear
+                Изчисти
               </button>
               <button
                 type="button"
                 onClick={() => setShowMap(false)}
                 className="flex-1 bg-[var(--clr-primary)] text-white py-2 rounded-lg text-xs font-bold hover:bg-[var(--clr-primary-hover)] transition-colors"
               >
-                Confirm Location
+                Потвърди локация
               </button>
             </div>
           </div>
@@ -392,7 +392,7 @@ export default function Profile() {
             <svg className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Back
+            Назад
           </button>
 
           <div className="flex items-center gap-4">
@@ -401,7 +401,7 @@ export default function Profile() {
               {formData.firstName.charAt(0) || user?.email?.charAt(0) || "?"}
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Edit Profile</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Редакция на профил</h1>
               <p className="text-sm text-gray-500">{user?.email}</p>
             </div>
           </div>
@@ -413,7 +413,7 @@ export default function Profile() {
               <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              Profile updated successfully!
+              Профилът е обновен успешно!
             </div>
           )}
           {error && (
@@ -425,7 +425,7 @@ export default function Profile() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Име</label>
                 <input
                   type="text"
                   name="firstName"
@@ -436,7 +436,7 @@ export default function Profile() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Фамилия</label>
                 <input
                   type="text"
                   name="lastName"
@@ -449,7 +449,7 @@ export default function Profile() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Имейл адрес</label>
               <input
                 type="email"
                 name="email"
@@ -461,7 +461,7 @@ export default function Profile() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Телефонен номер</label>
               <input
                 type="tel"
                 name="telephone"
@@ -473,8 +473,8 @@ export default function Profile() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Address / Location</label>
-              <p className="text-xs text-gray-400 mb-2">This is used to show doctors nearest to you.</p>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Адрес / Локация</label>
+              <p className="text-xs text-gray-400 mb-2">Използва се, за да ви показваме най-близките лекари.</p>
               <LocationField />
             </div>
 
@@ -484,14 +484,14 @@ export default function Profile() {
                 disabled={isSaving}
                 className="flex-1 bg-[var(--clr-primary)] text-white py-2.5 rounded-lg font-semibold hover:bg-[var(--clr-primary-hover)] hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50"
               >
-                {isSaving ? "Saving…" : "Save Changes"}
+                {isSaving ? "Запазване..." : "Запази промените"}
               </button>
               <button
                 type="button"
                 onClick={() => navigate(-1)}
                 className="px-6 py-2.5 border border-gray-300 text-gray-600 rounded-lg font-semibold hover:bg-gray-50 transition-all duration-200"
               >
-                Cancel
+                Отказ
               </button>
             </div>
           </form>
@@ -499,14 +499,14 @@ export default function Profile() {
 
         {/* Password Reset Section */}
         <div className="mt-8 bg-white border border-blue-100 rounded-xl p-6">
-          <h2 className="text-sm font-semibold text-[var(--clr-primary)] uppercase tracking-wide mb-3">Change Password</h2>
+          <h2 className="text-sm font-semibold text-[var(--clr-primary)] uppercase tracking-wide mb-3">Смяна на парола</h2>
           
           {passwordSuccess && (
             <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4 text-sm font-medium flex items-center gap-2">
               <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              Password changed successfully!
+              Паролата е сменена успешно!
             </div>
           )}
           {passwordError && (
@@ -517,39 +517,39 @@ export default function Profile() {
 
           <form onSubmit={handlePasswordSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Текуща парола</label>
               <input
                 type="password"
                 name="oldPassword"
                 value={passwordData.oldPassword}
                 onChange={handlePasswordChange}
-                placeholder="Enter your current password"
+                placeholder="Въведете текущата си парола"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--clr-primary)] transition"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Нова парола</label>
               <input
                 type="password"
                 name="newPassword"
                 value={passwordData.newPassword}
                 onChange={handlePasswordChange}
-                placeholder="Enter new password (min. 6 characters)"
+                placeholder="Въведете нова парола (мин. 6 символа)"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--clr-primary)] transition"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Потвърди нова парола</label>
               <input
                 type="password"
                 name="confirmPassword"
                 value={passwordData.confirmPassword}
                 onChange={handlePasswordChange}
-                placeholder="Confirm new password"
+                placeholder="Потвърдете новата парола"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--clr-primary)] transition"
                 required
               />
@@ -560,20 +560,20 @@ export default function Profile() {
               disabled={isChangingPassword}
               className="w-full bg-[var(--clr-primary)] text-white py-2.5 rounded-lg font-semibold hover:bg-[var(--clr-primary-hover)] hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50"
             >
-              {isChangingPassword ? "Changing…" : "Change Password"}
+              {isChangingPassword ? "Смяна..." : "Смени паролата"}
             </button>
           </form>
         </div>
 
         {/* Danger zone */}
         <div className="mt-8 bg-white border border-red-100 rounded-xl p-6">
-          <h2 className="text-sm font-semibold text-red-700 uppercase tracking-wide mb-3">Account</h2>
-          <p className="text-sm text-gray-500 mb-4">Logging out will end your current session.</p>
+          <h2 className="text-sm font-semibold text-red-700 uppercase tracking-wide mb-3">Профил</h2>
+          <p className="text-sm text-gray-500 mb-4">Излизането ще прекрати текущата ви сесия.</p>
           <button
             onClick={() => { logout(); navigate("/"); }}
             className="px-5 py-2 border border-red-300 text-red-600 rounded-lg text-sm font-semibold hover:bg-red-50 transition-colors"
           >
-            Log Out
+            Изход
           </button>
         </div>
       </div>

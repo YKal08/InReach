@@ -24,7 +24,7 @@ export default function GoogleMapsModal({ isOpen, onClose, embedUrl, externalUrl
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-0.5">Navigation</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-0.5">Навигация</p>
             <h2 className="text-lg font-bold text-gray-900 leading-tight">{title}</h2>
           </div>
           <div className="flex items-center gap-3">
@@ -37,7 +37,7 @@ export default function GoogleMapsModal({ isOpen, onClose, embedUrl, externalUrl
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
-              Open in Google Maps
+              Отвори в Google Maps
             </a>
             <button
               onClick={onClose}

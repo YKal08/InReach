@@ -65,7 +65,7 @@ export default function RouteMap({ stops, activeStopIndex, origin, height = "400
       });
       const originMarker = L.marker([origin.lat, origin.lng], { icon: doctorIcon })
         .addTo(map)
-        .bindPopup("<strong>Your location</strong>");
+        .bindPopup("<strong>Вашата локация</strong>");
       markersRef.current.push(originMarker);
       points.push([origin.lat, origin.lng]);
 

@@ -64,7 +64,7 @@ export default function DoctorDetailModal({ doctor, isOpen, onClose, onSendReque
             <h2 className="text-xl font-bold text-gray-900 leading-tight">{doctor.name}</h2>
             {doctor.distance !== undefined && (
               <span className="text-xs font-bold text-[var(--clr-accent-muted)] bg-[var(--clr-accent-light)] px-2 py-1 rounded-lg ml-3 shrink-0">
-                {doctor.distance.toFixed(1)} km
+                {doctor.distance.toFixed(1)} км
               </span>
             )}
           </div>
@@ -85,12 +85,12 @@ export default function DoctorDetailModal({ doctor, isOpen, onClose, onSendReque
           {!requestSent && (
             <div className="mb-5">
               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                Notes for the doctor <span className="font-normal normal-case">(optional)</span>
+                Бележки за лекаря <span className="font-normal normal-case">(по избор)</span>
               </label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Describe your situation, symptoms, or any other relevant information…"
+                placeholder="Опишете ситуацията, симптомите или друга важна информация..."
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--clr-accent)] resize-none"
               />
@@ -101,21 +101,21 @@ export default function DoctorDetailModal({ doctor, isOpen, onClose, onSendReque
           <div className="flex gap-3">
             {requestSent ? (
               <div className="flex-1 py-3 text-center bg-[var(--clr-success-bg)] border border-[var(--clr-accent)] text-[var(--clr-nav)] text-sm font-semibold rounded-lg">
-                Request sent
+                Заявката е изпратена
               </div>
             ) : (
               <button
                 onClick={handleSend}
                 className="flex-1 py-3 bg-[var(--clr-primary)] text-white text-sm font-semibold rounded-lg hover:bg-[var(--clr-primary-hover)] transition-colors duration-200 active:bg-[var(--clr-primary)]"
               >
-                Send Visit Request
+                Изпрати заявка за посещение
               </button>
             )}
             <button
               onClick={onClose}
               className="px-5 py-3 bg-gray-200 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-300 transition-colors duration-200"
             >
-              Close
+              Затвори
             </button>
           </div>
         </div>

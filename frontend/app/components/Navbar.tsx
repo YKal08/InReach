@@ -1,16 +1,15 @@
-import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useEasyMode } from "./EasyModeContext";
 import { useAuth } from "./AuthContext";
 
 export default function Navbar() {
   const { isEasyMode, toggleEasyMode } = useEasyMode();
-  const { isAuthenticated, isDoctor, logout, isLoading, user } = useAuth();
+  const { isAuthenticated, isDoctor, isLoading, user } = useAuth();
   const navigate = useNavigate();
 
   const displayName = user?.firstName
     ? `${user.firstName}${user.lastName ? ` ${user.lastName}` : ""}`
-    : user?.email?.split("@")[0] ?? "Account";
+    : user?.email?.split("@")[0] ?? "Профил";
 
   // Where "InReach" / "Home" links point
   const homeHref = !isAuthenticated ? "/" : isDoctor ? "/doctor-home" : "/home";
@@ -29,7 +28,7 @@ export default function Navbar() {
             to={homeHref}
             className="font-bold text-white hover:text-gray-200 transition whitespace-nowrap leading-none text-xl"
           >
-            {isEasyMode ? "Home" : "InReach"}
+            {isEasyMode ? "Начало" : "InReach"}
           </Link>
           <div className="h-5 w-px bg-white opacity-30" />
           {!isEasyMode && isAuthenticated && (!isDoctor || isAdmin) && (
@@ -37,7 +36,7 @@ export default function Navbar() {
               to="/doctors"
               className="text-white hover:text-gray-200 font-medium transition py-1 hidden sm:inline text-sm"
             >
-              Doctors
+              Лекари
             </Link>
           )}
           {isAdmin && !isEasyMode && (
@@ -52,13 +51,13 @@ export default function Navbar() {
         <div className="flex gap-3 items-center">
           {/* Easy Mode toggle */}
           <div className="flex items-center gap-2">
-            <span className="text-white text-sm font-medium hidden sm:inline">Easy Mode</span>
+            <span className="text-white text-sm font-medium hidden sm:inline">Лесен режим</span>
             <button
               onClick={toggleEasyMode}
               className={`relative inline-flex h-6 w-10 items-center rounded-full ${
                 isEasyMode ? "bg-[var(--clr-primary)]" : "bg-white/30"
               }`}
-              title={isEasyMode ? "Switch to normal mode" : "Switch to easy mode"}
+              title={isEasyMode ? "Превключи към нормален режим" : "Превключи към лесен режим"}
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-white ${
@@ -93,13 +92,13 @@ export default function Navbar() {
                     to="/login"
                     className="text-white hover:text-gray-200 font-medium transition py-1 whitespace-nowrap text-sm"
                   >
-                    Login
+                    Вход
                   </Link>
                   <Link
                     to="/register"
                     className="px-4 py-1.5 bg-[var(--clr-primary)] text-white rounded-lg font-medium hover:bg-[var(--clr-primary-hover)] transition whitespace-nowrap text-sm"
                   >
-                    Sign Up
+                    Регистрация
                   </Link>
                 </>
               )}

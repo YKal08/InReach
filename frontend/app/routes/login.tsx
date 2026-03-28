@@ -8,8 +8,8 @@ import { useRoleGuard } from "../utils/useRoleGuard";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Login - InReach" },
-    { name: "description", content: "Sign in to your InReach account" },
+    { title: "Вход - InReach" },
+    { name: "description", content: "Влезте в своя InReach профил" },
   ];
 }
 
@@ -36,7 +36,7 @@ export default function Login() {
       // Instead we re-check via the updated auth context value after await
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "Invalid email or password. Please try again.");
+      setError(err.message || "Невалиден имейл или парола. Опитайте отново.");
       setIsLoading(false);
       return;
     }
@@ -56,8 +56,8 @@ export default function Login() {
         <Navbar />
         <div className="em-page">
           <section className="em-card">
-            <h1 className="em-heading">Welcome Back</h1>
-            <p className="em-body">Sign in to your account.</p>
+            <h1 className="em-heading">Добре дошли отново</h1>
+            <p className="em-body">Влезте в профила си.</p>
 
             {error && (
               <div className="bg-red-100 border-2 border-red-500 text-red-700 p-4 rounded-xl mb-6 text-xl font-bold">
@@ -67,7 +67,7 @@ export default function Login() {
 
             <form onSubmit={handleSubmit} className="em-form-grid">
               <div>
-                <label htmlFor="em-email" className="em-label">Email Address</label>
+                <label htmlFor="em-email" className="em-label">Имейл адрес</label>
                 <input
                   id="em-email"
                   type="email"
@@ -79,7 +79,7 @@ export default function Login() {
                 />
               </div>
               <div>
-                <label htmlFor="em-password" className="em-label">Password</label>
+                <label htmlFor="em-password" className="em-label">Парола</label>
                 <input
                   id="em-password"
                   type="password"
@@ -96,13 +96,13 @@ export default function Login() {
                   className="em-btn-primary w-full disabled:opacity-50"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Signing In..." : "Sign In"}
+                  {isLoading ? "Влизане..." : "Вход"}
                 </button>
               </div>
             </form>
             <p className="em-body mt-6">
-              Don't have an account?{" "}
-              <Link to="/register" className="text-(--clr-primary) hover:text-(--clr-primary-hover) font-bold underline">Register here</Link>
+              Нямате профил?{" "}
+              <Link to="/register" className="text-(--clr-primary) hover:text-(--clr-primary-hover) font-bold underline">Регистрирайте се тук</Link>
             </p>
           </section>
         </div>
@@ -117,8 +117,8 @@ export default function Login() {
         <div className="max-w-md w-full">
           <div className="bg-white rounded-lg p-8 border border-gray-200 animate-scale-in shadow-md">
             <div className="text-center mb-8 animate-fade-in">
-              <h1 className="text-3xl font-bold text-slate-800 mb-2">Welcome Back</h1>
-              <p className="text-gray-600">Sign in to your account</p>
+              <h1 className="text-3xl font-bold text-slate-800 mb-2">Добре дошли отново</h1>
+              <p className="text-gray-600">Влезте в профила си</p>
             </div>
 
             {error && (
@@ -129,7 +129,7 @@ export default function Login() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="animate-slide-in-up [animation-delay:100ms]">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Имейл адрес</label>
                 <input
                   type="email"
                   value={email}
@@ -141,7 +141,7 @@ export default function Login() {
               </div>
 
               <div className="animate-slide-in-up [animation-delay:200ms]">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Парола</label>
                 <input
                   type="password"
                   value={password}
@@ -157,14 +157,14 @@ export default function Login() {
                 className="w-full bg-(--clr-primary) text-white py-2 rounded-lg font-bold hover:bg-(--clr-primary-hover) hover:scale-105 active:scale-95 transition-all duration-200 mt-6 animate-slide-in-up [animation-delay:300ms] disabled:opacity-50"
                 disabled={isLoading}
               >
-                {isLoading ? "Signing In..." : "Sign In"}
+                {isLoading ? "Влизане..." : "Вход"}
               </button>
             </form>
 
             <p className="text-center text-gray-600 mt-6 animate-fade-in [animation-delay:400ms]">
-              Don't have an account?{" "}
+              Нямате профил?{" "}
               <Link to="/register" className="text-(--clr-primary) hover:text-(--clr-primary-hover) font-bold hover:underline transition-all duration-200">
-                Register here
+                Регистрирайте се тук
               </Link>
             </p>
           </div>
@@ -173,7 +173,7 @@ export default function Login() {
 
       <footer className="bg-gray-100 border-t border-gray-200 mt-20 animate-fade-in">
         <div className="max-w-4xl mx-auto px-4 py-8 text-center text-black">
-          <p>&copy; 2025 InReach. Bringing healthcare to remote areas.</p>
+          <p>&copy; 2025 InReach. Доставяме здравна грижа в отдалечени райони.</p>
         </div>
       </footer>
     </div>
