@@ -5,6 +5,7 @@ export default [
   route("login", "routes/login.tsx"),
   route("register", "routes/register.tsx"),
   route("terms", "routes/terms.tsx"),
+  route("admin", "routes/admin.tsx"),
   route("doctors", "routes/doctors.tsx"),
   route("home", "routes/home.tsx"),
   route("request-doctor", "routes/request-doctor.tsx"),

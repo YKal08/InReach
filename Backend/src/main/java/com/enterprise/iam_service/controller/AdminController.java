@@ -1,11 +1,11 @@
 package com.enterprise.iam_service.controller;
 
 
+import com.enterprise.iam_service.dto.AdminUserResponse;
 import com.enterprise.iam_service.dto.AssignUserRoleRequest;
 import com.enterprise.iam_service.dto.RoleResponse;
 import com.enterprise.iam_service.dto.RoleRequest;
 import com.enterprise.iam_service.dto.UserRoleUpdateResponse;
-import com.enterprise.iam_service.model.User;
 import com.enterprise.iam_service.service.AdminDashboardService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,21 +28,21 @@ public class AdminController {
     // GET all users
     @GetMapping("/users")
     @PreAuthorize("hasRole('Admin')")
-    public ResponseEntity<List<User>> getAllUsers() {
+    public ResponseEntity<List<AdminUserResponse>> getAllUsers() {
         return ResponseEntity.ok(adminDashboardService.getAllUsers());
     }
 
     // GET all locked accounts
     @GetMapping("/users/locked")
     @PreAuthorize("hasRole('Admin')")
-    public ResponseEntity<?> getLockedUsers() {
+    public ResponseEntity<List<AdminUserResponse>> getLockedUsers() {
         return ResponseEntity.ok(adminDashboardService.getLockedUsers());
     }
 
     // GET all pending accounts (new registrations awaiting approval)
     @GetMapping("/users/pending")
     @PreAuthorize("hasRole('Admin')")
-    public ResponseEntity<?> getPendingUsers() {
+    public ResponseEntity<List<AdminUserResponse>> getPendingUsers() {
         return ResponseEntity.ok(adminDashboardService.getPendingUsers());
     }
 

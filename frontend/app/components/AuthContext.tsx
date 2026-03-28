@@ -1,5 +1,6 @@
 import { createContext, useState, useContext, useEffect, type ReactNode } from "react";
 import { api } from "../utils/api";
+import { extractRoleNames, type RoleLike } from "../utils/roles";
 
 interface User {
   firstName: string;
@@ -9,7 +10,8 @@ interface User {
   address: string;
   telephone: string;
   status: "ACTIVE" | "PENDING" | "LOCKED";
-  roles: string[];
+  roles?: RoleLike[];
+  doctor?: boolean;
   lastLogin?: string;
   createdAt?: string;
 }
@@ -115,8 +117,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (token) await fetchUserProfile(token);
   };
 
-  // A user is a doctor if any of their roles contains "DOCTOR" (handles "DOCTOR" or "ROLE_DOCTOR")
-  const isDoctor = !!user?.roles?.some((r) => r.toUpperCase().includes("DOCTOR"));
+  const normalizedRoles = extractRoleNames(user?.roles);
+  const isDoctor = normalizedRoles.some((r) => r.includes("DOCTOR")) || !!user?.doctor;
 
   const value: AuthContextType = {
     user,
