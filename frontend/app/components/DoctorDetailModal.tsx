@@ -21,9 +21,11 @@ interface DoctorDetailModalProps {
   onClose: () => void;
   onSendRequest: (doctorId: number, notes: string) => void;
   requestSent: boolean;
+  isSending?: boolean;
+  error?: string | null;
 }
 
-export default function DoctorDetailModal({ doctor, isOpen, onClose, onSendRequest, requestSent }: DoctorDetailModalProps) {
+export default function DoctorDetailModal({ doctor, isOpen, onClose, onSendRequest, requestSent, isSending = false, error = null }: DoctorDetailModalProps) {
   const [notes, setNotes] = useState("");
 
   if (!isOpen || !doctor) return null;
@@ -106,9 +108,10 @@ export default function DoctorDetailModal({ doctor, isOpen, onClose, onSendReque
             ) : (
               <button
                 onClick={handleSend}
+                disabled={isSending}
                 className="flex-1 py-3 bg-[var(--clr-primary)] text-white text-sm font-semibold rounded-lg hover:bg-[var(--clr-primary-hover)] transition-colors duration-200 active:bg-[var(--clr-primary)]"
               >
-                Изпрати заявка за посещение
+                {isSending ? "Изпращане..." : "Изпрати заявка за посещение"}
               </button>
             )}
             <button
@@ -118,6 +121,7 @@ export default function DoctorDetailModal({ doctor, isOpen, onClose, onSendReque
               Затвори
             </button>
           </div>
+          {error && <p className="mt-3 text-xs text-red-600">{error}</p>}
         </div>
       </div>
     </div>
