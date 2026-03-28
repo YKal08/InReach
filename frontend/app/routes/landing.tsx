@@ -4,15 +4,21 @@ import Navbar from "../components/Navbar";
 import { useAuth } from "../components/AuthContext";
 
 export default function Landing() {
-  const { isAuthenticated, isDoctor, isLoading } = useAuth();
+  const { isAuthenticated, isDoctor, isDriver, isLoading } = useAuth();
   const navigate = useNavigate();
 
   // Redirect authenticated users away from the landing page immediately
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      navigate(isDoctor ? "/doctor-home" : "/home", { replace: true });
+      if (isDoctor) {
+        navigate("/doctor-home", { replace: true });
+      } else if (isDriver) {
+        navigate("/driver-home", { replace: true });
+      } else {
+        navigate("/home", { replace: true });
+      }
     }
-  }, [isAuthenticated, isDoctor, isLoading, navigate]);
+  }, [isAuthenticated, isDoctor, isDriver, isLoading, navigate]);
 
   // Show nothing while resolving auth (avoids flash)
   if (isLoading) return null;
