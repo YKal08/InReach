@@ -1,21 +1,105 @@
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import Navbar from "../components/Navbar";
 import { useRoleGuard } from "../utils/useRoleGuard";
+import { api } from "../utils/api";
 
 interface PendingRequest {
   id: string;
   doctorType: string;
-  situation: string;
   address: string;
-  submittedDate: string;
   status: string;
+  notes?: string;
+  doctorEgn: string;
+}
+
+interface DoctorApiResponse {
+  egn: string;
+  firstName: string;
+  lastName: string;
+}
+
+function statusClass(status: string): string {
+  const normalized = status?.toUpperCase();
+  if (normalized === "PENDING") return "bg-yellow-100 text-yellow-800";
+  if (normalized === "ACCEPTED") return "bg-blue-100 text-blue-800";
+  if (normalized === "IN_PROGRESS") return "bg-indigo-100 text-indigo-800";
+  if (normalized === "COMPLETED") return "bg-emerald-100 text-emerald-800";
+  if (normalized === "CANCELLED") return "bg-gray-200 text-gray-700";
+  return "bg-gray-100 text-gray-700";
 }
 
 export default function PendingRequests() {
   const { isLoading } = useRoleGuard("PATIENT");
+  const [requests, setRequests] = useState<PendingRequest[]>([]);
+  const [doctorNamesByEgn, setDoctorNamesByEgn] = useState<Record<string, string>>({});
+  const [loadingRequests, setLoadingRequests] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
-  // TODO: Fetch pending requests from backend
-  const pendingRequests: PendingRequest[] = [];
+  const loadRequests = async () => {
+    setLoadingRequests(true);
+    setError(null);
+    try {
+      const response = await api.get<PendingRequest[]>("/visit_request/get");
+      setRequests(response);
+    } catch (e: any) {
+      setError(e?.message ?? "Неуспешно зареждане на заявките.");
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
+
+  useEffect(() => {
+    loadRequests();
+
+    const loadDoctorNames = async () => {
+      try {
+        const doctors = await api.get<DoctorApiResponse[]>("/users/doctors/nearby");
+        const next: Record<string, string> = {};
+        for (const doctor of doctors) {
+          const fullName = `${doctor.firstName ?? ""} ${doctor.lastName ?? ""}`.trim();
+          if (doctor.egn && fullName) {
+            next[doctor.egn] = `Д-р ${fullName}`;
+          }
+        }
+        setDoctorNamesByEgn(next);
+      } catch {
+        setDoctorNamesByEgn({});
+      }
+    };
+
+    loadDoctorNames();
+  }, []);
+
+  const sortedRequests = useMemo(() => {
+    const priority: Record<string, number> = {
+      PENDING: 1,
+      ACCEPTED: 2,
+      IN_PROGRESS: 3,
+      COMPLETED: 4,
+      CANCELLED: 5,
+    };
+
+    return [...requests].sort((a, b) => {
+      const aRank = priority[a.status?.toUpperCase()] ?? 99;
+      const bRank = priority[b.status?.toUpperCase()] ?? 99;
+      return aRank - bRank;
+    });
+  }, [requests]);
+
+  const handleCancel = async (requestId: string) => {
+    setCancellingId(requestId);
+    setError(null);
+    try {
+      await api.post("/visit_request/cancel", { requestId });
+      await loadRequests();
+    } catch (e: any) {
+      setError(e?.message ?? "Неуспешно отказване на заявката.");
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   if (isLoading) return null;
 
@@ -27,34 +111,39 @@ export default function PendingRequests() {
         {/* Header */}
         <div className="mb-8">
           <p className="text-gray-500 text-sm uppercase tracking-wide mb-2">Пациентски портал</p>
-          <h1 className="text-3xl font-bold text-gray-900 mb-1">Чакащи заявки</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-1">Моите заявки</h1>
           <p className="text-gray-600">
-            {pendingRequests.length} чакащ{pendingRequests.length !== 1 ? "и" : "а"} заявк{pendingRequests.length !== 1 ? "и" : "а"}
+            {sortedRequests.length} общо заявк{sortedRequests.length !== 1 ? "и" : "а"}
           </p>
         </div>
+        {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
 
         {/* Back Button */}
         <Link
           to="/home"
-          className="inline-block mb-8 text-[var(--clr-accent)] hover:text-[var(--clr-accent-muted)] font-medium transition-colors"
+          className="inline-block mb-8 text-(--clr-accent) hover:text-(--clr-accent-muted) font-medium transition-colors"
         >
           ← Обратно към началото
         </Link>
 
         {/* Requests List */}
-        {pendingRequests.length === 0 ? (
+        {loadingRequests ? (
           <div className="bg-white border border-gray-200 p-12 rounded-lg shadow-sm text-center">
-            <p className="text-gray-600 mb-6">Нямате чакащи заявки в момента.</p>
+            <p className="text-gray-600">Зареждане на заявки...</p>
+          </div>
+        ) : sortedRequests.length === 0 ? (
+          <div className="bg-white border border-gray-200 p-12 rounded-lg shadow-sm text-center">
+            <p className="text-gray-600 mb-6">Нямате подадени заявки в момента.</p>
             <Link
               to="/doctors"
-              className="inline-block bg-[var(--clr-primary)] text-white px-6 py-3 rounded-lg font-medium hover:bg-[var(--clr-primary-hover)] transition-colors"
+              className="inline-block bg-(--clr-primary) text-white px-6 py-3 rounded-lg font-medium hover:bg-(--clr-primary-hover) transition-colors"
             >
               Направи нова заявка
             </Link>
           </div>
         ) : (
           <div className="space-y-4">
-            {pendingRequests.map((request: any) => (
+            {sortedRequests.map((request) => (
               <div
                 key={request.id}
                 className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow"
@@ -62,13 +151,11 @@ export default function PendingRequests() {
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                      {request.doctorType}
+                      {doctorNamesByEgn[request.doctorEgn] || `Д-р (${request.doctorEgn})`}
                     </h3>
-                    <p className="text-sm text-gray-500">
-                      Подадена на: {new Date(request.submittedDate).toLocaleDateString()}
-                    </p>
+                    <p className="text-sm text-gray-500">Лекар EGN: {request.doctorEgn}</p>
                   </div>
-                  <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusClass(request.status)}`}>
                     {request.status}
                   </span>
                 </div>
@@ -82,15 +169,21 @@ export default function PendingRequests() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 uppercase tracking-wide mb-1">
-                      Ситуация
+                      Бележки
                     </p>
-                    <p className="text-gray-600">{request.situation}</p>
+                    <p className="text-gray-600">{request.notes || "Няма"}</p>
                   </div>
                 </div>
 
-                <button className="text-[var(--clr-accent)] hover:text-[var(--clr-accent-muted)] font-medium transition-colors">
-                  Виж детайли →
-                </button>
+                {request.status?.toUpperCase() === "PENDING" && (
+                  <button
+                    onClick={() => handleCancel(request.id)}
+                    disabled={cancellingId === request.id}
+                    className="text-(--clr-accent) hover:text-(--clr-accent-muted) font-medium transition-colors disabled:opacity-60"
+                  >
+                    {cancellingId === request.id ? "Отказване..." : "Откажи заявката"}
+                  </button>
+                )}
               </div>
             ))}
           </div>

@@ -3,14 +3,15 @@ import { Link } from "react-router";
 import Navbar from "../components/Navbar";
 import { useEasyMode } from "../components/EasyModeContext";
 import { useAuth } from "../components/AuthContext";
-import { calculateDistance } from "../utils/distance";
 import DoctorDetailModal from "../components/DoctorDetailModal";
 import { useRoleGuard } from "../utils/useRoleGuard";
+import { api } from "../utils/api";
 
 const MapComponent = lazy(() => import("../components/MapPicker"));
 
 interface Doctor {
   id: number;
+  egn: string;
   name: string;
   specialty: string;
   location: string;
@@ -24,16 +25,45 @@ interface Doctor {
   distance?: number;
 }
 
-const ALL_DOCTORS: Doctor[] = [
-  { id: 1, name: "Д-р Мария Иванова",       specialty: "Обща медицина", location: "София",   phone: "+359 (2) 123-4567",   email: "maria.ivanova@inreach.bg",      bio: "Опитен общопрактикуващ лекар с фокус върху превенцията и здравната култура на пациентите.",          availability: "Пон-Пет, 09:00-17:00",       image: "https://ui-avatars.com/api/?name=Maria+Ivanova&background=4a4699&color=fff&bold=true&size=200",       lat: 42.6977, lng: 23.3219 },
-  { id: 2, name: "Д-р Александър Петров",    specialty: "Кардиология",       location: "Пловдив", phone: "+359 (32) 234-5678",  email: "alex.petrov@inreach.bg",        bio: "Специалист по сърдечно-съдови заболявания с богат опит в диагностика и лечение.",                          availability: "Вто-Съб, 10:00-18:00",      image: "https://ui-avatars.com/api/?name=Alexander+Petrov&background=4a4699&color=fff&bold=true&size=200",    lat: 42.1354, lng: 24.7453 },
-  { id: 3, name: "Д-р Елена Георгиева",     specialty: "Педиатрия",       location: "Варна",   phone: "+359 (52) 345-6789",  email: "elena.georgieva@inreach.bg",    bio: "Педиатър, посветен на грижата за детското здраве с внимание и човешко отношение.",                          availability: "Пон-Чет, 08:00-16:00",       image: "https://ui-avatars.com/api/?name=Elena+Georgieva&background=4a4699&color=fff&bold=true&size=200",     lat: 43.2141, lng: 27.9147 },
-  { id: 4, name: "Д-р Иван Димитров",       specialty: "Ортопедия",      location: "Бургас",  phone: "+359 (56) 456-7890",  email: "ivan.dimitrov@inreach.bg",      bio: "Експерт в лечението на ставни и костни проблеми чрез оперативни и неоперативни методи.",                 availability: "Сря-Нед, 11:00-19:00",      image: "https://ui-avatars.com/api/?name=Ivan+Dimitrov&background=4a4699&color=fff&bold=true&size=200",      lat: 42.5048, lng: 27.4626 },
-  { id: 5, name: "Д-р София Николова",      specialty: "Дерматология",      location: "София",   phone: "+359 (2) 567-8901",   email: "sofia.nikolova@inreach.bg",     bio: "Дерматолог, предоставящ диагностика и терапия при кожни заболявания.",                  availability: "Вто-Съб, 09:00-17:00",       image: "https://ui-avatars.com/api/?name=Sofia+Nikolova&background=4a4699&color=fff&bold=true&size=200",     lat: 42.6977, lng: 23.3219 },
-  { id: 6, name: "Д-р Йоргос Пападопулос", specialty: "Неврология",       location: "Пловдив", phone: "+359 (32) 678-9012",  email: "yorgos.papadopoulos@inreach.bg",bio: "Специалист по неврологични заболявания с комплексен подход към диагностика и лечение.",                availability: "Пон, Сря, Пет, 09:00-15:00", image: "https://ui-avatars.com/api/?name=Yorgos+Papadopoulos&background=4a4699&color=fff&bold=true&size=200",lat: 42.1354, lng: 24.7453 },
-];
+interface DoctorApiResponse {
+  egn: string;
+  firstName: string;
+  lastName: string;
+  address: string;
+  telephone: string;
+  description: string;
+  distanceKm: number;
+}
 
-const pendingRequests: any[] = [];
+const DEFAULT_SPECIALTY = "Лекар";
+const DEFAULT_AVAILABILITY = "Няма наличен график";
+const DEFAULT_EMAIL = "Няма публичен имейл";
+
+function toDoctor(apiDoctor: DoctorApiResponse, index: number): Doctor {
+  const name = `${apiDoctor.firstName ?? ""} ${apiDoctor.lastName ?? ""}`.trim() || "Неизвестен лекар";
+  const avatarName = encodeURIComponent(name);
+
+  return {
+    id: index + 1,
+    egn: apiDoctor.egn,
+    name,
+    specialty: DEFAULT_SPECIALTY,
+    location: apiDoctor.address || "Няма адрес",
+    phone: apiDoctor.telephone || "Няма телефон",
+    email: DEFAULT_EMAIL,
+    bio: apiDoctor.description || "Няма описание",
+    availability: DEFAULT_AVAILABILITY,
+    image: `https://ui-avatars.com/api/?name=${avatarName}&background=4a4699&color=fff&bold=true&size=200`,
+    lat: 0,
+    lng: 0,
+    distance: apiDoctor.distanceKm,
+  };
+}
+
+interface VisitRequestSummary {
+  id: string;
+  status: string;
+}
 
 export default function Home() {
   const { isEasyMode } = useEasyMode();
@@ -43,56 +73,47 @@ export default function Home() {
   const { isLoading: authLoading } = useRoleGuard("PATIENT");
 
   // ── Doctor proximity ───────────────────────────────────────────────────────
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [locationStatus, setLocationStatus] = useState<"loading" | "granted" | "default">("loading");
+  const [allDoctors, setAllDoctors] = useState<Doctor[]>([]);
+  const [isDoctorsLoading, setIsDoctorsLoading] = useState(true);
+  const [doctorsError, setDoctorsError] = useState<string | null>(null);
+  const [requestError, setRequestError] = useState<string | null>(null);
+  const [isRequestSending, setIsRequestSending] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [requestSentIds, setRequestSentIds] = useState<number[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState("");
-  const [maxDistance] = useState(200);
 
-  const specialties = Array.from(new Set(ALL_DOCTORS.map((d) => d.specialty))).sort();
+  const specialties = Array.from(new Set(allDoctors.map((d) => d.specialty))).sort();
 
   useEffect(() => {
-    // Seed with registration location first
-    if (registrationLocation) {
-      setUserLocation({ lat: registrationLocation.lat, lng: registrationLocation.lng });
-      setLocationStatus("granted");
-    }
-
-    if (!("geolocation" in navigator)) {
-      if (!registrationLocation) {
-        setUserLocation({ lat: 42.6977, lng: 23.3219 });
-        setLocationStatus("default");
+    const loadDoctors = async () => {
+      setIsDoctorsLoading(true);
+      setDoctorsError(null);
+      try {
+        const doctors = await api.get<DoctorApiResponse[]>("/users/doctors/nearby");
+        setAllDoctors(doctors.map(toDoctor));
+      } catch (error) {
+        console.error("Failed to load doctors:", error);
+        setDoctorsError("Неуспешно зареждане на лекарите. Моля, опитайте отново.");
+        setAllDoctors([]);
+      } finally {
+        setIsDoctorsLoading(false);
       }
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => { setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocationStatus("granted"); },
-      () => {
-        if (!registrationLocation) {
-          setUserLocation({ lat: 42.6977, lng: 23.3219 });
-          setLocationStatus("default");
-        }
-      }
-    );
-  }, [registrationLocation]);
+    };
 
-  const doctorsWithDistance = useMemo(() => {
-    if (!userLocation) return ALL_DOCTORS;
-    return ALL_DOCTORS.map((d) => ({ ...d, distance: calculateDistance(userLocation.lat, userLocation.lng, d.lat, d.lng) }));
-  }, [userLocation]);
+    loadDoctors();
+  }, []);
 
   const filteredDoctors = useMemo(() => {
-    return doctorsWithDistance
+    return allDoctors
       .filter((d) => {
         const matchesSearch = d.name.toLowerCase().includes(searchQuery.toLowerCase()) || d.specialty.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesSpecialty = !selectedSpecialty || d.specialty === selectedSpecialty;
-        return matchesSearch && matchesSpecialty && (d.distance === undefined || d.distance <= maxDistance);
+        return matchesSearch && matchesSpecialty;
       })
       .sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
-  }, [doctorsWithDistance, searchQuery, selectedSpecialty, maxDistance]);
+  }, [allDoctors, searchQuery, selectedSpecialty]);
 
   // ── Normal mode request form state ────────────────────────────────────────
   const [showMap, setShowMap] = useState(false);
@@ -100,8 +121,26 @@ export default function Home() {
   const [requestForm, setRequestForm] = useState({ doctorType: "", address: "", situation: "", notes: "" });
   const [submitted, setSubmitted] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [myRequests, setMyRequests] = useState<VisitRequestSummary[]>([]);
+  const [isMyRequestsLoading, setIsMyRequestsLoading] = useState(true);
 
   const doctorTypes = ["General Practitioner", "Pediatrician", "Cardiologist", "Dermatologist", "Orthopedic Surgeon", "Neurologist", "Psychiatrist", "Dentist", "Eye Specialist", "ENT Specialist"];
+
+  useEffect(() => {
+    const loadMyRequests = async () => {
+      setIsMyRequestsLoading(true);
+      try {
+        const response = await api.get<VisitRequestSummary[]>("/visit_request/get");
+        setMyRequests(response);
+      } catch {
+        setMyRequests([]);
+      } finally {
+        setIsMyRequestsLoading(false);
+      }
+    };
+
+    loadMyRequests();
+  }, []);
 
   // Pre-fill address from registration location
   useEffect(() => {
@@ -153,6 +192,28 @@ export default function Home() {
     setTimeout(() => setSubmitted(false), 4000);
   };
 
+  const handleSendRequest = async (doctorId: number, notes: string) => {
+    const doctor = allDoctors.find((d) => d.id === doctorId);
+    if (!doctor || isRequestSending) return;
+
+    setRequestError(null);
+    setIsRequestSending(true);
+
+    try {
+      await api.post(`/visit_request/create/${doctor.egn}`, {
+        address: user?.address || doctor.location,
+        doctorType: doctor.specialty || DEFAULT_SPECIALTY,
+        notes: notes?.trim() || undefined,
+      });
+      setRequestSentIds((prev) => [...prev, doctorId]);
+    } catch (error) {
+      console.error("Failed to create visit request:", error);
+      setRequestError("Неуспешно изпращане на заявката. Опитайте отново.");
+    } finally {
+      setIsRequestSending(false);
+    }
+  };
+
   if (authLoading) return null;
 
   // ── EASY MODE — doctors list with search + specialty filter ────────────────
@@ -164,12 +225,9 @@ export default function Home() {
           <div>
             <h1 className="em-heading">Специалисти наблизо</h1>
             <p className="em-body">
-              {locationStatus !== "loading"
-                ? locationStatus === "granted"
-                  ? `Показваме лекари в радиус от ${maxDistance} км от вашата локация.`
-                  : `Показваме лекари в радиус от ${maxDistance} км от София (достъпът до локация е отказан).`
-                : "Определяме вашата локация..."}
+              Показват се лекари в радиус до 100 км според системата.
             </p>
+            {doctorsError && <p className="text-xs text-red-500 mt-1">{doctorsError}</p>}
           </div>
 
           {/* Search bar */}
@@ -218,7 +276,11 @@ export default function Home() {
 
           {/* Doctor list */}
           <div className="flex flex-col gap-4">
-            {filteredDoctors.length === 0 ? (
+            {isDoctorsLoading ? (
+              <div className="em-card text-center">
+                <p className="em-body text-gray-500">Зареждане на лекарите...</p>
+              </div>
+            ) : filteredDoctors.length === 0 ? (
               <div className="em-card text-center">
                 <p className="em-body text-gray-500">Няма намерени лекари. Опитайте различно търсене или специалност.</p>
                 <button
@@ -257,8 +319,10 @@ export default function Home() {
           doctor={selectedDoctor}
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          onSendRequest={(id) => setRequestSentIds((p) => [...p, id])}
+          onSendRequest={handleSendRequest}
           requestSent={selectedDoctor ? requestSentIds.includes(selectedDoctor.id) : false}
+          isSending={isRequestSending}
+          error={requestError}
         />
       </div>
     );
@@ -283,7 +347,7 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
 
           {/* Last Checkup */}
-          <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col min-h-[160px]">
+          <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col min-h-40">
             <p className="text-gray-500 text-xs uppercase tracking-wide mb-2 font-bold">Здравна история</p>
             <h2 className="text-xl font-bold text-gray-900 mb-2">Последен преглед</h2>
             <div className="mt-auto">
@@ -294,7 +358,7 @@ export default function Home() {
           </div>
 
           {/* Condition Overview */}
-          <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col min-h-[160px]">
+          <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col min-h-40">
             <p className="text-gray-500 text-xs uppercase tracking-wide mb-2 font-bold">Здравен статус</p>
             <h2 className="text-xl font-bold text-gray-900 mb-2">Общ преглед на състоянието</h2>
             <div className="mt-auto">
@@ -307,8 +371,12 @@ export default function Home() {
           {/* Pending Requests */}
           <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col">
             <p className="text-gray-500 text-xs uppercase tracking-wide mb-2 font-bold">Статус на заявки</p>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">{pendingRequests.length} заявк{pendingRequests.length !== 1 ? "и" : "а"}</h2>
-            <p className="text-sm text-gray-600 mb-6 flex-grow">Проследете статуса на подадените от вас заявки.</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
+              {isMyRequestsLoading
+                ? "..."
+                : `${myRequests.length} заявк${myRequests.length !== 1 ? "и" : "а"}`}
+            </h2>
+            <p className="text-sm text-gray-600 mb-6 grow">Проследете статуса на подадените от вас заявки.</p>
             <Link to="/pending-requests" className="block w-full bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors duration-200 text-center">
               Виж заявките
             </Link>
@@ -318,8 +386,8 @@ export default function Home() {
           <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col">
             <p className="text-gray-500 text-xs uppercase tracking-wide mb-2 font-bold">Здравни услуги</p>
             <h2 className="text-xl font-bold text-gray-900 mb-2">Намери специалист</h2>
-            <p className="text-sm text-gray-600 mb-6 flex-grow">Разгледайте лекари близо до вас и изпратете заявка директно от профила им.</p>
-            <Link to="/doctors" className="block w-full bg-[var(--clr-primary)] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[var(--clr-primary-hover)] transition-colors duration-200 text-center">
+            <p className="text-sm text-gray-600 mb-6 grow">Разгледайте лекари близо до вас и изпратете заявка директно от профила им.</p>
+            <Link to="/doctors" className="block w-full bg-(--clr-primary) text-white px-6 py-3 rounded-lg font-semibold hover:bg-(--clr-primary-hover) transition-colors duration-200 text-center">
               Разгледай лекари
             </Link>
           </div>
