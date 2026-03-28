@@ -1,5 +1,6 @@
 package com.enterprise.iam_service.service;
 
+import com.enterprise.iam_service.dto.AdminUserResponse;
 import com.enterprise.iam_service.dto.AssignUserRoleRequest;
 import com.enterprise.iam_service.dto.RoleResponse;
 import com.enterprise.iam_service.dto.RoleRequest;
@@ -31,18 +32,24 @@ public class AdminDashboardService {
     // ========================== User Management ==========================
 
     // * Business Logic: Retrieve all users in the system.
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<AdminUserResponse> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(this::toAdminUserResponse)
+                .collect(Collectors.toList());
     }
 
     // * Business Logic: Retrieve all users with LOCKED status.
-    public List<User> getLockedUsers() {
-        return userRepository.findAllByStatus("LOCKED");
+    public List<AdminUserResponse> getLockedUsers() {
+        return userRepository.findAllByStatus("LOCKED").stream()
+                .map(this::toAdminUserResponse)
+                .collect(Collectors.toList());
     }
 
     // * Business Logic: Retrieve all users with PENDING status (awaiting admin approval).
-    public List<User> getPendingUsers() {
-        return userRepository.findAllByStatus("PENDING");
+    public List<AdminUserResponse> getPendingUsers() {
+        return userRepository.findAllByStatus("PENDING").stream()
+                .map(this::toAdminUserResponse)
+                .collect(Collectors.toList());
     }
 
     // * Business Logic: Activate a user account (PENDING or LOCKED → ACTIVE).
@@ -221,6 +228,21 @@ public class AdminDashboardService {
 
     private RoleResponse toRoleResponse(Role role) {
         return new RoleResponse(role.getId(), role.getName(), role.getDescription());
+    }
+
+    private AdminUserResponse toAdminUserResponse(User user) {
+        List<String> roleNames = user.getRoles().stream()
+                .map(Role::getName)
+                .collect(Collectors.toList());
+
+        return new AdminUserResponse(
+                user.getEgn(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getEmail(),
+                user.getStatus(),
+                roleNames
+        );
     }
 
     // ========================== Helper Methods ==========================

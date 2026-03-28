@@ -1,11 +1,11 @@
 package com.enterprise.iam_service.controller;
 
 import com.enterprise.iam_service.SecurityConfig;
+import com.enterprise.iam_service.dto.AdminUserResponse;
 import com.enterprise.iam_service.dto.AssignUserRoleRequest;
 import com.enterprise.iam_service.dto.RoleRequest;
 import com.enterprise.iam_service.dto.RoleResponse;
 import com.enterprise.iam_service.dto.UserRoleUpdateResponse;
-import com.enterprise.iam_service.model.User;
 import com.enterprise.iam_service.security.JwtAuthenticationFilter;
 import com.enterprise.iam_service.service.AdminDashboardService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -52,9 +52,14 @@ class AdminControllerTest {
 
     @Test
     void getAllUsers_shouldReturnUsers() throws Exception {
-        User user = new User();
-        user.setEgn("0882345690");
-        user.setEmail("user@enterprise.com");
+        AdminUserResponse user = new AdminUserResponse(
+                "0882345690",
+                "John",
+                "Doe",
+                "user@enterprise.com",
+                "ACTIVE",
+                List.of("PATIENT")
+        );
 
         when(adminDashboardService.getAllUsers()).thenReturn(List.of(user));
 
@@ -65,9 +70,14 @@ class AdminControllerTest {
 
     @Test
     void getLockedUsers_shouldReturnLockedUsers() throws Exception {
-        User user = new User();
-        user.setEgn("0882345690");
-        user.setStatus("LOCKED");
+        AdminUserResponse user = new AdminUserResponse(
+                "0882345690",
+                "John",
+                "Doe",
+                "user@enterprise.com",
+                "LOCKED",
+                List.of("PATIENT")
+        );
 
         when(adminDashboardService.getLockedUsers()).thenReturn(List.of(user));
 
@@ -78,9 +88,14 @@ class AdminControllerTest {
 
     @Test
     void getPendingUsers_shouldReturnPendingUsers() throws Exception {
-        User user = new User();
-        user.setEgn("0882345690");
-        user.setStatus("PENDING");
+        AdminUserResponse user = new AdminUserResponse(
+                "0882345690",
+                "John",
+                "Doe",
+                "user@enterprise.com",
+                "PENDING",
+                List.of("PATIENT")
+        );
 
         when(adminDashboardService.getPendingUsers()).thenReturn(List.of(user));
 
