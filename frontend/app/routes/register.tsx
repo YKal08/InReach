@@ -44,7 +44,6 @@ export default function Register() {
   const [locating, setLocating] = useState(false);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
 
-  // Redirect away if already logged in
   const { isLoading: authLoading } = useRoleGuard("unauthenticated");
 
   const countries = [
@@ -64,6 +63,12 @@ export default function Register() {
     if (name === "egn") {
       setEgnError(value && !isValidEGN(value) ? "Невалиден формат на ЕГН. Моля, проверете 10-те цифри." : "");
     }
+  };
+
+  // Dedicated handler for the address input to keep it stable
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    setFormData((prev) => ({ ...prev, addressLocation: value }));
   };
 
   const handleLocationSelect = (lat: number, lng: number, address: string) => {
@@ -123,7 +128,6 @@ export default function Register() {
         email: formData.email,
         password: formData.password,
       };
-      // Pass the picked location so it seeds doctor proximity across the app
       await register(backendData, selectedLocation ?? undefined);
       setIsSubmitted(true);
     } catch (err: any) {

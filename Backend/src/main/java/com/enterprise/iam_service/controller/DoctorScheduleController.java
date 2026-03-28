@@ -27,7 +27,7 @@ public class DoctorScheduleController {
     // ! ADMIN: must supply doctorEgn in body to target a specific doctor.
     // ! DOCTOR: doctorEgn in body is ignored — schedule is always created for themselves.
     @PostMapping("/create")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR')")
+    @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<DoctorScheduleResponse> create(
             @RequestBody @Valid DoctorScheduleRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -38,7 +38,7 @@ public class DoctorScheduleController {
     // * Returns all active schedule entries from the start of the current week onward
     // * for the currently authenticated user.
     @GetMapping("/get")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR')")
+    @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<List<DoctorScheduleResponse>> get() {
         return ResponseEntity.ok(doctorScheduleService.getMySchedules());
     }
@@ -47,7 +47,7 @@ public class DoctorScheduleController {
     // ! DOCTOR: can only update their own schedule entries (enforced in service).
     // ! ADMIN: can update any entry.
     @PutMapping("/update/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR')")
+    @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<DoctorScheduleResponse> update(
             @PathVariable UUID id,
             @RequestBody DoctorScheduleRequest request) {
@@ -59,7 +59,7 @@ public class DoctorScheduleController {
     // ! DOCTOR: can only remove their own schedule entries.
     // ! ADMIN: can remove any entry.
     @DeleteMapping("/remove/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR')")
+    @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<String> remove(@PathVariable UUID id) {
         doctorScheduleService.remove(id);
         return ResponseEntity.ok("Schedule removed successfully");
