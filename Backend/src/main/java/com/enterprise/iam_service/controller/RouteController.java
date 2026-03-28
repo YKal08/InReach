@@ -19,13 +19,13 @@ public class RouteController {
     private final RoutePlanningService routePlanningService;
 
     @GetMapping("/my")
-    @PreAuthorize("hasAnyRole('DOCTOR','DRIVER')")
+    @PreAuthorize("hasAnyRole('Doctor','Driver')")
     public ResponseEntity<List<VisitPlanResponse>> getMyPlans(@RequestParam(required = false) LocalDate date) {
         return ResponseEntity.ok(routePlanningService.getMyPlans(date));
     }
 
     @PostMapping("/my/generate-draft")
-    @PreAuthorize("hasRole('DOCTOR')")
+    @PreAuthorize("hasRole('Doctor')")
     public ResponseEntity<VisitPlanResponse> generateMyDraftPlan(
             @RequestParam(required = false) LocalDate date,
             @RequestParam(defaultValue = "false") boolean force
@@ -34,19 +34,19 @@ public class RouteController {
     }
 
     @GetMapping("/{routeId}")
-    @PreAuthorize("hasAnyRole('DOCTOR','DRIVER')")
+    @PreAuthorize("hasAnyRole('Doctor','Driver')")
     public ResponseEntity<VisitPlanResponse> getRoute(@PathVariable UUID routeId) {
         return ResponseEntity.ok(routePlanningService.getRouteWithStops(routeId));
     }
 
     @PostMapping("/{routeId}/confirm")
-    @PreAuthorize("hasRole('DOCTOR')")
+    @PreAuthorize("hasRole('Doctor')")
     public ResponseEntity<VisitPlanResponse> confirmMyPlan(@PathVariable UUID routeId) {
         return ResponseEntity.ok(routePlanningService.confirmMyPlan(routeId));
     }
 
     @PostMapping("/{routeId}/cancel")
-    @PreAuthorize("hasRole('DOCTOR')")
+    @PreAuthorize("hasRole('Doctor')")
     public ResponseEntity<VisitPlanResponse> cancelMyPlan(@PathVariable UUID routeId) {
         return ResponseEntity.ok(routePlanningService.cancelMyPlan(routeId));
     }

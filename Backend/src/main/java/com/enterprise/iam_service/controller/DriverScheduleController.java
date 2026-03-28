@@ -25,7 +25,7 @@ public class DriverScheduleController {
     // ! ADMIN: must supply pharmacistEgn in body to target a specific driver.
     // ! DRIVER: pharmacistEgn in body is ignored — schedule is always created for themselves.
     @PostMapping("/create")
-    @PreAuthorize("hasRole('DRIVER')")
+    @PreAuthorize("hasRole('Driver')")
     public ResponseEntity<DriverScheduleResponse> create(
             @RequestBody @Valid DriverScheduleRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -36,7 +36,7 @@ public class DriverScheduleController {
     // * Returns all active schedule entries from the start of the current week onward
     // * for the currently authenticated user.
     @GetMapping("/get")
-    @PreAuthorize("hasRole('DRIVER')")
+    @PreAuthorize("hasRole('Driver')")
     public ResponseEntity<List<DriverScheduleResponse>> get() {
         return ResponseEntity.ok(driverScheduleService.getMySchedules());
     }
@@ -45,7 +45,7 @@ public class DriverScheduleController {
     // ! DRIVER: can only update their own schedule entries (enforced in service).
     // ! ADMIN: can update any entry.
     @PutMapping("/update/{id}")
-    @PreAuthorize("hasRole('DRIVER')")
+    @PreAuthorize("hasRole('Driver')")
     public ResponseEntity<DriverScheduleResponse> update(
             @PathVariable UUID id,
             @RequestBody DriverScheduleRequest request) {
@@ -57,7 +57,7 @@ public class DriverScheduleController {
     // ! DRIVER: can only remove their own schedule entries.
     // ! ADMIN: can remove any entry.
     @DeleteMapping("/remove/{id}")
-    @PreAuthorize("hasRole('DRIVER')")
+    @PreAuthorize("hasRole('Driver')")
     public ResponseEntity<String> remove(@PathVariable UUID id) {
         driverScheduleService.remove(id);
         return ResponseEntity.ok("Schedule removed successfully");
