@@ -61,6 +61,7 @@ class UserControllerTest {
                 "+359888000111",
                 "user@enterprise.com",
                 null,
+                null,
                 false
         );
 
