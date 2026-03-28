@@ -1,6 +1,7 @@
 package com.enterprise.iam_service.service;
 
 import com.enterprise.iam_service.dto.CreateVisitRequestRequest;
+import com.enterprise.iam_service.dto.DoctorVisitRequestResponse;
 import com.enterprise.iam_service.dto.VisitRequestResponse;
 import com.enterprise.iam_service.model.User;
 import com.enterprise.iam_service.model.VisitRequest;
@@ -45,6 +46,21 @@ public class VisitRequestService {
                 .toList();
     }
 
+    public List<DoctorVisitRequestResponse> getMyPendingRequestsAsDoctor(String email) {
+        User doctor = getUserByEmail(email);
+
+        boolean hasDoctorRole = doctor.getRoles().stream()
+                .anyMatch(role -> "DOCTOR".equals(role.getName().toUpperCase(Locale.ROOT)));
+        if (!hasDoctorRole) {
+            throw new RuntimeException("Authenticated user is not a doctor");
+        }
+
+        return visitRequestRepository.findByDoctorEgnAndStatusOrderByCreatedAtAsc(doctor.getEgn(), "PENDING")
+                .stream()
+                .map(this::toDoctorResponse)
+                .toList();
+    }
+
     public void cancel(String email, UUID requestId) {
         User user = getUserByEmail(email);
 
@@ -82,6 +98,22 @@ public class VisitRequestService {
             visitRequest.getDoctorEgn(),
                 visitRequest.getStatus(),
                 visitRequest.getNotes()
+        );
+    }
+
+    private DoctorVisitRequestResponse toDoctorResponse(VisitRequest visitRequest) {
+        User patient = visitRequest.getUser();
+
+        return new DoctorVisitRequestResponse(
+                visitRequest.getId(),
+                patient.getEgn(),
+                (patient.getFirstName() + " " + patient.getLastName()).trim(),
+                visitRequest.getAddress(),
+                patient.getLat(),
+                patient.getLng(),
+                visitRequest.getStatus(),
+                visitRequest.getNotes(),
+                visitRequest.getCreatedAt()
         );
     }
 }

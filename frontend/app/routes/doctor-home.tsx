@@ -1,14 +1,14 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { useEasyMode } from "../components/EasyModeContext";
-import { calculateDistance } from "../utils/distance";
 import GoogleMapsModal from "../components/GoogleMapsModal";
 import { useRoleGuard } from "../utils/useRoleGuard";
 import { api } from "../utils/api";
+import { useAuth } from "../components/AuthContext";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface VisitRequest {
-  id: number;
+  id: string;
   patientName: string;
   address: string;
   situation: string;
@@ -67,20 +67,53 @@ interface DoctorScheduleRequest {
   acceptingRequests: boolean;
 }
 
-const INITIAL_REQUESTS: VisitRequest[] = [
-  { id: 1, patientName: "Иван Иванов",    address: "Пловдив",        situation: "Висока температура и кашлица от 3 дни, температура 39.5°C.",     lat: 42.1352, lng: 24.7452, status: "pending" },
-  { id: 2, patientName: "Елена Петрова",  address: "ул. Оборище 15, София",    situation: "Внезапна остра болка в кръста, затруднено ходене.",         lat: 42.6953, lng: 23.3401, status: "pending" },
-  { id: 3, patientName: "Георги Ангелов", address: "бул. Витоша 20, София",     situation: "Алергична реакция след започване на ново лекарство вчера.", lat: 42.6912, lng: 23.3198, status: "pending" },
-  { id: 4, patientName: "Мария Николова", address: "ул. Граф Игнатиев 5, София", situation: "Педиатричен контролен преглед на 6 месеца.",                                lat: 42.6895, lng: 23.3245, status: "pending" },
-];
+interface VisitStopResponse {
+  id: number;
+  visitRequestId: string;
+  stopOrder: number;
+  patientEgn: string;
+  patientName: string;
+  patientAddress: string;
+  latitude: number | null;
+  longitude: number | null;
+  arrivalTime24h: string | null;
+  arrivalWindowStart24h: string | null;
+  arrivalWindowEnd24h: string | null;
+  travelMinutesFromPrevious: number | null;
+  timeToNextStopMinutes: number | null;
+  status: string;
+}
 
-const DOCTOR_BASE = { lat: 42.6977, lng: 23.3219 };
+interface VisitPlanResponse {
+  planId: string;
+  doctorEgn: string;
+  doctorName: string;
+  targetDate: string;
+  status: string;
+  createdAt: string;
+  visits: VisitStopResponse[];
+}
+
+interface DoctorVisitRequestResponse {
+  id: string;
+  patientEgn: string;
+  patientName: string;
+  patientAddress: string;
+  latitude: number | null;
+  longitude: number | null;
+  status: string;
+  notes: string | null;
+  createdAt: string;
+}
+
+const FALLBACK_DOCTOR_BASE = { lat: 42.6977, lng: 23.3219 };
 
 /** Vite replaces import.meta.env.VAR at build time — must use exact dot-access, no optional chaining */
 function getApiKey(): string {
-  const key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string;
+  const env = (import.meta as any).env || {};
+  const key = (env.VITE_GOOGLE_MAPS_API_KEY || env.GOOGLE_MAPS_API_KEY || "") as string;
   if (!key) {
-    console.error("[InReach] VITE_GOOGLE_MAPS_API_KEY is undefined. Check your .env file and restart the dev server.");
+    console.error("[InReach] Google Maps key is missing. Set VITE_GOOGLE_MAPS_API_KEY (or GOOGLE_MAPS_API_KEY bridged in CI). ");
   }
   return key ?? "";
 }
@@ -114,24 +147,86 @@ function toApiTime(value: string): string {
   return value.length === 5 ? `${value}:00` : value;
 }
 
-// ── Route helpers ─────────────────────────────────────────────────────────────
+function getTodayIsoDate(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
 
-/** Nearest-neighbor optimization — returns a new ordered array */
-function optimizeRoute(pending: VisitRequest[], origin: { lat: number; lng: number }): VisitRequest[] {
-  let cur = { ...origin };
-  const remaining = [...pending];
-  const sorted: VisitRequest[] = [];
-  while (remaining.length > 0) {
-    let ni = 0, min = Infinity;
-    for (let i = 0; i < remaining.length; i++) {
-      const d = calculateDistance(cur.lat, cur.lng, remaining[i].lat, remaining[i].lng);
-      if (d < min) { min = d; ni = i; }
+function getTomorrowIsoDate(): string {
+  const now = new Date();
+  now.setDate(now.getDate() + 1);
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function normalizeStopStatus(status: string | null | undefined): "pending" | "done" {
+  const value = (status || "").toUpperCase();
+  return value === "DONE" || value === "COMPLETED" ? "done" : "pending";
+}
+
+function mapPlanToRequests(plan: VisitPlanResponse): VisitRequest[] {
+  const visits = [...(plan.visits || [])].sort((a, b) => (a.stopOrder ?? 0) - (b.stopOrder ?? 0));
+
+  return visits.map((stop) => {
+    const windowStart = stop.arrivalWindowStart24h || "";
+    const windowEnd = stop.arrivalWindowEnd24h || "";
+    const arrival = stop.arrivalTime24h || "";
+
+    const situation = windowStart && windowEnd
+      ? `Планиран прозорец: ${windowStart}-${windowEnd}`
+      : arrival
+      ? `Планиран час на пристигане: ${arrival}`
+      : "Планирано посещение";
+
+    return {
+      id: stop.visitRequestId || `${plan.planId}-${stop.id}`,
+      patientName: stop.patientName,
+      address: stop.patientAddress,
+      situation,
+      lat: stop.latitude ?? 0,
+      lng: stop.longitude ?? 0,
+      status: normalizeStopStatus(stop.status),
+    };
+  });
+}
+
+function mapDoctorPendingToRequests(items: DoctorVisitRequestResponse[]): VisitRequest[] {
+  return [...items].map((item) => ({
+    id: item.id,
+    patientName: item.patientName,
+    address: item.patientAddress,
+    situation: item.notes || "Подадена заявка за посещение",
+    lat: item.latitude ?? 0,
+    lng: item.longitude ?? 0,
+    status: normalizeStopStatus(item.status),
+  }));
+}
+
+function mergeWithLocalDone(existing: VisitRequest[], incoming: VisitRequest[]): VisitRequest[] {
+  const doneById = new Map(existing.filter((r) => r.status === "done").map((r) => [r.id, r]));
+  const seen = new Set<string>();
+
+  const merged = incoming.map((r) => {
+    seen.add(r.id);
+    return doneById.has(r.id) ? { ...r, status: "done" as const } : r;
+  });
+
+  for (const done of doneById.values()) {
+    if (!seen.has(done.id)) {
+      merged.push(done);
     }
-    const [found] = remaining.splice(ni, 1);
-    sorted.push({ ...found, distance: min });
-    cur = { lat: found.lat, lng: found.lng };
   }
-  return sorted;
+
+  return merged;
+}
+
+function hasCoordinates(req: VisitRequest): boolean {
+  return Number.isFinite(req.lat) && Number.isFinite(req.lng) && (req.lat !== 0 || req.lng !== 0);
 }
 
 /**
@@ -148,7 +243,7 @@ function buildEmbedUrl(
 
   const dest = stops[stops.length - 1];
   const middleStops = stops.slice(0, -1);
-  const waypoints = middleStops.slice(0, 3).map((s) => `${s.lat},${s.lng}`).join("|");
+  const waypoints = middleStops.map((s) => `${s.lat},${s.lng}`).join("|");
 
   const params = new URLSearchParams({
     key,
@@ -206,6 +301,7 @@ function buildSingleExternalUrl(origin: { lat: number; lng: number }, stop: Visi
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function DoctorHome() {
   const { isEasyMode } = useEasyMode();
+  const { registrationLocation } = useAuth();
 
   // Doctor-only guard — redirects patients to /home, guests to /login
   const { isLoading: authLoading } = useRoleGuard("DOCTOR");
@@ -218,9 +314,18 @@ export default function DoctorHome() {
   const [scheduleError, setScheduleError] = useState<string | null>(null);
   const [scheduleSuccess, setScheduleSuccess] = useState<string | null>(null);
   const [editingSchedule, setEditingSchedule] = useState(false);
-  const [requests, setRequests] = useState<VisitRequest[]>(INITIAL_REQUESTS);
+  const [requests, setRequests] = useState<VisitRequest[]>([]);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [routeOptimized, setRouteOptimized] = useState(false);
+  const [routeError, setRouteError] = useState<string | null>(null);
+  const [isRouteLoading, setIsRouteLoading] = useState(false);
+
+  const doctorBase = useMemo(
+    () => registrationLocation
+      ? { lat: registrationLocation.lat, lng: registrationLocation.lng }
+      : FALLBACK_DOCTOR_BASE,
+    [registrationLocation]
+  );
 
   // Map modal state
   const [mapModal, setMapModal] = useState<{ embedUrl: string; externalUrl: string; title: string } | null>(null);
@@ -228,6 +333,37 @@ export default function DoctorHome() {
   const pending = useMemo(() => requests.filter((r) => r.status === "pending"), [requests]);
   const done    = useMemo(() => requests.filter((r) => r.status === "done"),    [requests]);
   const activeReq = activeIndex !== null ? requests[activeIndex] : null;
+  const hasAnyRequests = requests.length > 0;
+  const canGenerateRoute = pending.length > 0 || !hasAnyRequests;
+
+  const fetchBestPlan = useCallback(async (): Promise<VisitPlanResponse | null> => {
+    const candidates = [
+      `/routes/my?date=${encodeURIComponent(getTodayIsoDate())}`,
+      `/routes/my?date=${encodeURIComponent(getTomorrowIsoDate())}`,
+      "/routes/my",
+    ];
+
+    let lastError: any = null;
+
+    for (const endpoint of candidates) {
+      try {
+        const plans = await api.get<VisitPlanResponse[]>(endpoint);
+        const selected = plans.find((p) => (p.visits?.length ?? 0) > 0) || plans[0];
+        if (selected) return selected;
+      } catch (error: any) {
+        if (error?.status === 403) throw error;
+        lastError = error;
+      }
+    }
+
+    if (lastError) throw lastError;
+    return null;
+  }, []);
+
+  const fetchPendingVisitRequestsForDoctor = useCallback(async (): Promise<VisitRequest[]> => {
+    const items = await api.get<DoctorVisitRequestResponse[]>("/visit_request/doctor/get");
+    return mapDoctorPendingToRequests(items);
+  }, []);
 
   useEffect(() => {
     const loadSchedule = async () => {
@@ -280,32 +416,129 @@ export default function DoctorHome() {
     loadSchedule();
   }, []);
 
+  useEffect(() => {
+    const loadExistingRoute = async () => {
+      setIsRouteLoading(true);
+      setRouteError(null);
+
+      try {
+        const selectedPlan = await fetchBestPlan();
+
+        if (!selectedPlan) {
+          const pendingOnly = await fetchPendingVisitRequestsForDoctor();
+          setRequests(pendingOnly);
+          setRouteOptimized(false);
+          const firstPendingIndex = pendingOnly.findIndex((r) => r.status === "pending");
+          setActiveIndex(firstPendingIndex >= 0 ? firstPendingIndex : null);
+          return;
+        }
+
+        const mapped = mapPlanToRequests(selectedPlan);
+        setRequests(mapped);
+        setRouteOptimized(mapped.length > 0);
+
+        const firstPendingIndex = mapped.findIndex((r) => r.status === "pending");
+        setActiveIndex(firstPendingIndex >= 0 ? firstPendingIndex : null);
+      } catch (error: any) {
+        console.error("Failed to load route plan:", error);
+        if (error?.status === 403) {
+          setRouteError("Нямате права за достъп до маршрути (403).");
+        } else {
+          setRouteError("Неуспешно зареждане на маршрута от сървъра.");
+        }
+      } finally {
+        setIsRouteLoading(false);
+      }
+    };
+
+    void loadExistingRoute();
+  }, [fetchBestPlan, fetchPendingVisitRequestsForDoctor]);
+
   // ── Route actions ────────────────────────────────────────────────────────────
 
-  /** Optimize + open full multi-stop route in-app modal */
-  const handleStartRoute = useCallback(() => {
-    const pendingReqs = requests.filter((r) => r.status === "pending");
-    if (pendingReqs.length === 0) return;
+  /** Fetch route from backend and open full multi-stop map */
+  const handleStartRoute = useCallback(async () => {
+    setRouteError(null);
+    setIsRouteLoading(true);
 
-    const sorted = optimizeRoute(pendingReqs, DOCTOR_BASE);
-    const doneReqs = requests.filter((r) => r.status === "done");
-    setRequests([...sorted, ...doneReqs]);
-    setRouteOptimized(true);
-    setActiveIndex(0);
+    try {
+      const plan = await fetchBestPlan();
+      if (!plan) {
+        const pendingOnly = await fetchPendingVisitRequestsForDoctor();
+        const mergedNoPlan = mergeWithLocalDone(requests, pendingOnly);
+        setRequests(mergedNoPlan);
+        const firstPendingIndex = mergedNoPlan.findIndex((r) => r.status === "pending");
+        setActiveIndex(firstPendingIndex >= 0 ? firstPendingIndex : null);
 
-    setMapModal({
-      embedUrl: buildEmbedUrl(DOCTOR_BASE, sorted),
-      externalUrl: buildExternalUrl(DOCTOR_BASE, sorted),
-      title: `Пълен маршрут — ${sorted.length} спирк${sorted.length !== 1 ? "и" : "а"}`,
-    });
-  }, [requests]);
+        const mappableStopsNoPlan = mergedNoPlan.filter((r) => r.status === "pending" && hasCoordinates(r));
+        if (mappableStopsNoPlan.length > 0) {
+          setRouteOptimized(true);
+          setMapModal({
+            embedUrl: buildEmbedUrl(doctorBase, mappableStopsNoPlan),
+            externalUrl: buildExternalUrl(doctorBase, mappableStopsNoPlan),
+            title: `Пълен маршрут — ${mappableStopsNoPlan.length} спирк${mappableStopsNoPlan.length !== 1 ? "и" : "а"}`,
+          });
+        } else {
+          setRouteOptimized(false);
+          setMapModal(null);
+        }
+
+        if (mergedNoPlan.length === 0) {
+          setRouteError("Няма налични заявки за посещение.");
+        }
+        return;
+      }
+
+      const mapped = mapPlanToRequests(plan);
+      if (mapped.length === 0) {
+        setRequests([]);
+        setActiveIndex(null);
+        setRouteOptimized(false);
+        setMapModal(null);
+        setRouteError("Няма налични посещения за маршрут към момента.");
+        return;
+      }
+
+      const merged = mergeWithLocalDone(requests, mapped);
+      setRequests(merged);
+      setRouteOptimized(true);
+
+      const firstPendingIndex = merged.findIndex((r) => r.status === "pending");
+      setActiveIndex(firstPendingIndex >= 0 ? firstPendingIndex : 0);
+
+      const mappableStops = merged.filter((r) => r.status === "pending" && hasCoordinates(r));
+      if (mappableStops.length > 0) {
+        setMapModal({
+          embedUrl: buildEmbedUrl(doctorBase, mappableStops),
+          externalUrl: buildExternalUrl(doctorBase, mappableStops),
+          title: `Пълен маршрут — ${mappableStops.length} спирк${mappableStops.length !== 1 ? "и" : "а"}`,
+        });
+      } else {
+        setMapModal(null);
+      }
+    } catch (error: any) {
+      console.error("Failed to load route:", error);
+      if (error?.status === 403) {
+        setRouteError("Нямате права за достъп до маршрути (403).");
+      } else {
+        setRouteError(error?.message || "Неуспешно зареждане на маршрут.");
+      }
+    } finally {
+      setIsRouteLoading(false);
+    }
+  }, [doctorBase, fetchBestPlan, fetchPendingVisitRequestsForDoctor, requests]);
 
   /** Open a single patient stop in the modal */
   const handleOpenPatientMap = (req: VisitRequest, reqIndex: number) => {
+    if (!hasCoordinates(req)) {
+      setRouteError("Липсват координати за това посещение.");
+      return;
+    }
+
     setActiveIndex(reqIndex);
     setMapModal({
-      embedUrl: buildSingleEmbedUrl(DOCTOR_BASE, req),
-      externalUrl: buildSingleExternalUrl(DOCTOR_BASE, req),
+      embedUrl: buildSingleEmbedUrl(doctorBase, req),
+      externalUrl: buildSingleExternalUrl(doctorBase, req),
       title: `Навигация до ${req.patientName}`,
     });
   };
@@ -457,6 +690,8 @@ export default function DoctorHome() {
             {isScheduleLoading && <p className="em-body text-gray-500 mb-3">Зареждане на графика...</p>}
             {scheduleError && <p className="em-body text-red-600 mb-3">{scheduleError}</p>}
             {scheduleSuccess && <p className="em-body text-green-600 mb-3">{scheduleSuccess}</p>}
+            {isRouteLoading && <p className="em-body text-gray-500 mb-3">Зареждане на маршрута...</p>}
+            {routeError && <p className="em-body text-red-600 mb-3">{routeError}</p>}
             <div className="divide-y divide-gray-100">
               {DAYS.map((day) => (
                 <div key={day} className="flex items-center gap-4 py-3">
@@ -488,8 +723,8 @@ export default function DoctorHome() {
           <section className="em-card">
             <div className="flex justify-between items-center mb-4">
               <h2 className="em-subheading" style={{ marginBottom: 0 }}>Опашка за посещения ({pending.length})</h2>
-              {pending.length > 0 && (
-                <button onClick={handleStartRoute} className="em-btn-primary" style={{ padding: "10px 20px", fontSize: "16px" }}>
+              {canGenerateRoute && (
+                <button onClick={() => void handleStartRoute()} disabled={isRouteLoading} className="em-btn-primary disabled:opacity-60" style={{ padding: "10px 20px", fontSize: "16px" }}>
                   {routeOptimized ? "Рестартирай маршрута" : "Старт на маршрута"}
                 </button>
               )}
@@ -583,6 +818,8 @@ export default function DoctorHome() {
             {isScheduleLoading && <p className="text-sm text-gray-500 mb-3">Зареждане на графика...</p>}
             {scheduleError && <p className="text-sm text-red-600 mb-3">{scheduleError}</p>}
             {scheduleSuccess && <p className="text-sm text-green-600 mb-3">{scheduleSuccess}</p>}
+            {isRouteLoading && <p className="text-sm text-gray-500 mb-3">Зареждане на маршрута...</p>}
+            {routeError && <p className="text-sm text-red-600 mb-3">{routeError}</p>}
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
               {DAYS.map((day) => <NormalDayCard key={day} day={day} />)}
             </div>
@@ -596,14 +833,17 @@ export default function DoctorHome() {
             </h2>
             <p className="text-sm text-gray-600 mb-4 grow">
               {done.length > 0 ? `${done.length} завършени днес. ` : ""}
-              {pending.length > 0
+              {!hasAnyRequests
+                ? "Натиснете Старт на маршрута, за да генерирате план от сървъра."
+                : pending.length > 0
                 ? "Натиснете Старт на маршрута за оптимизиран многоетапен маршрут в Google Maps."
                 : "Всички посещения за днес са завършени!"}
             </p>
-            {pending.length > 0 && (
+            {canGenerateRoute && (
               <button
-                onClick={handleStartRoute}
-                className="block w-full bg-(--clr-primary) text-white px-6 py-3 rounded-lg font-semibold hover:bg-(--clr-primary-hover) transition-colors duration-200 text-center text-sm"
+                onClick={() => void handleStartRoute()}
+                disabled={isRouteLoading}
+                className="block w-full bg-(--clr-primary) text-white px-6 py-3 rounded-lg font-semibold hover:bg-(--clr-primary-hover) transition-colors duration-200 text-center text-sm disabled:opacity-60"
               >
                 {routeOptimized ? "Рестартирай маршрута" : "Старт на маршрута"}
               </button>

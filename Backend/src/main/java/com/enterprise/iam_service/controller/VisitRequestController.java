@@ -2,11 +2,13 @@ package com.enterprise.iam_service.controller;
 
 import com.enterprise.iam_service.dto.CancelVisitRequestRequest;
 import com.enterprise.iam_service.dto.CreateVisitRequestRequest;
+import com.enterprise.iam_service.dto.DoctorVisitRequestResponse;
 import com.enterprise.iam_service.dto.VisitRequestResponse;
 import com.enterprise.iam_service.service.VisitRequestService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,6 +39,13 @@ public class VisitRequestController {
     public ResponseEntity<List<VisitRequestResponse>> get() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok(visitRequestService.getMyRequests(email));
+    }
+
+    @GetMapping("/doctor/get")
+    @PreAuthorize("hasRole('Doctor')")
+    public ResponseEntity<List<DoctorVisitRequestResponse>> getForDoctor() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(visitRequestService.getMyPendingRequestsAsDoctor(email));
     }
 
     @PostMapping("/cancel")
