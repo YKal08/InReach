@@ -2,12 +2,15 @@ import type { Route } from "./+types/doctors";
 import Navbar from "../components/Navbar";
 import { useEasyMode } from "../components/EasyModeContext";
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { Navigate } from "react-router";
 import DoctorDetailModal from "../components/DoctorDetailModal";
 import { useRoleGuard } from "../utils/useRoleGuard";
 import { api } from "../utils/api";
+import { useAuth } from "../components/AuthContext";
 
 interface Doctor {
   id: number;
+  egn: string;
   name: string;
   specialty: string;
   location: string;
@@ -48,6 +51,7 @@ function toDoctor(apiDoctor: DoctorApiResponse, index: number): Doctor {
 
   return {
     id: index + 1,
+    egn: apiDoctor.egn,
     name,
     specialty: DEFAULT_SPECIALTY,
     location: apiDoctor.address || "Няма адрес",
@@ -64,6 +68,7 @@ function toDoctor(apiDoctor: DoctorApiResponse, index: number): Doctor {
 
 export default function Doctors() {
   const { isEasyMode } = useEasyMode();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
@@ -71,6 +76,8 @@ export default function Doctors() {
   const [allDoctors, setAllDoctors] = useState<Doctor[]>([]);
   const [isDoctorsLoading, setIsDoctorsLoading] = useState(true);
   const [doctorsError, setDoctorsError] = useState<string | null>(null);
+  const [requestError, setRequestError] = useState<string | null>(null);
+  const [isRequestSending, setIsRequestSending] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [requestSentIds, setRequestSentIds] = useState<number[]>([]);
@@ -116,10 +123,36 @@ export default function Doctors() {
       .sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
   }, [searchQuery, selectedSpecialty, selectedLocation, doctorsWithDistance]);
 
-  const handleOpenDoctor = (doctor: Doctor) => { setSelectedDoctor(doctor); setIsModalOpen(true); };
-  const handleSendRequest = (doctorId: number) => { setRequestSentIds((prev) => [...prev, doctorId]); };
+  const handleOpenDoctor = (doctor: Doctor) => {
+    setRequestError(null);
+    setSelectedDoctor(doctor);
+    setIsModalOpen(true);
+  };
+
+  const handleSendRequest = async (doctorId: number, notes: string) => {
+    const doctor = allDoctors.find((d) => d.id === doctorId);
+    if (!doctor || isRequestSending) return;
+
+    setRequestError(null);
+    setIsRequestSending(true);
+
+    try {
+      await api.post(`/visit_request/create/${doctor.egn}`, {
+        address: user?.address || doctor.location,
+        doctorType: doctor.specialty || DEFAULT_SPECIALTY,
+        notes: notes?.trim() || undefined,
+      });
+      setRequestSentIds((prev) => [...prev, doctorId]);
+    } catch (error) {
+      console.error("Failed to create visit request:", error);
+      setRequestError("Неуспешно изпращане на заявката. Опитайте отново.");
+    } finally {
+      setIsRequestSending(false);
+    }
+  };
 
   if (authLoading) return null;
+  if (isEasyMode) return <Navigate to="/home" replace />;
 
   return (
     <div className="min-h-screen bg-white">
@@ -349,6 +382,8 @@ export default function Doctors() {
         onClose={() => setIsModalOpen(false)}
         onSendRequest={handleSendRequest}
         requestSent={selectedDoctor ? requestSentIds.includes(selectedDoctor.id) : false}
+        isSending={isRequestSending}
+        error={requestError}
       />
     </div>
   );
