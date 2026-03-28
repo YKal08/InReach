@@ -1,11 +1,10 @@
 import type { Route } from "./+types/doctors";
 import Navbar from "../components/Navbar";
 import { useEasyMode } from "../components/EasyModeContext";
-import { useAuth } from "../components/AuthContext";
-import { useState, useMemo, useEffect } from "react";
-import { calculateDistance } from "../utils/distance";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import DoctorDetailModal from "../components/DoctorDetailModal";
 import { useRoleGuard } from "../utils/useRoleGuard";
+import { api } from "../utils/api";
 
 interface Doctor {
   id: number;
@@ -22,6 +21,16 @@ interface Doctor {
   distance?: number;
 }
 
+interface DoctorApiResponse {
+  egn: string;
+  firstName: string;
+  lastName: string;
+  address: string;
+  telephone: string;
+  description: string;
+  distanceKm: number;
+}
+
 export function meta({ }: Route.MetaArgs) {
   return [
     { title: "Нашите специалисти - InReach" },
@@ -29,25 +38,39 @@ export function meta({ }: Route.MetaArgs) {
   ];
 }
 
-const ALL_DOCTORS: Doctor[] = [
-  { id: 1, name: "Д-р Мария Иванова",       specialty: "Обща медицина", location: "София",   phone: "+359 (2) 123-4567",   email: "maria.ivanova@inreach.bg",      bio: "Опитен общопрактикуващ лекар с фокус върху превенцията и здравната култура на пациентите.",          availability: "Пон-Пет, 09:00-17:00",       image: "https://ui-avatars.com/api/?name=Maria+Ivanova&background=4a4699&color=fff&bold=true&size=200",       lat: 42.6977, lng: 23.3219 },
-  { id: 2, name: "Д-р Александър Петров",    specialty: "Кардиология",       location: "Пловдив", phone: "+359 (32) 234-5678",  email: "alex.petrov@inreach.bg",        bio: "Специалист по сърдечно-съдови заболявания с богат опит в диагностика и лечение.",                          availability: "Вто-Съб, 10:00-18:00",      image: "https://ui-avatars.com/api/?name=Alexander+Petrov&background=4a4699&color=fff&bold=true&size=200",    lat: 42.1354, lng: 24.7453 },
-  { id: 3, name: "Д-р Елена Георгиева",     specialty: "Педиатрия",       location: "Варна",   phone: "+359 (52) 345-6789",  email: "elena.georgieva@inreach.bg",    bio: "Педиатър, посветен на грижата за детското здраве с внимание и човешко отношение.",                          availability: "Пон-Чет, 08:00-16:00",       image: "https://ui-avatars.com/api/?name=Elena+Georgieva&background=4a4699&color=fff&bold=true&size=200",     lat: 43.2141, lng: 27.9147 },
-  { id: 4, name: "Д-р Иван Димитров",       specialty: "Ортопедия",      location: "Бургас",  phone: "+359 (56) 456-7890",  email: "ivan.dimitrov@inreach.bg",      bio: "Експерт в лечението на ставни и костни проблеми чрез оперативни и неоперативни методи.",                 availability: "Сря-Нед, 11:00-19:00",      image: "https://ui-avatars.com/api/?name=Ivan+Dimitrov&background=4a4699&color=fff&bold=true&size=200",      lat: 42.5048, lng: 27.4626 },
-  { id: 5, name: "Д-р София Николова",      specialty: "Дерматология",      location: "София",   phone: "+359 (2) 567-8901",   email: "sofia.nikolova@inreach.bg",     bio: "Дерматолог, предоставящ диагностика и терапия при кожни заболявания.",                  availability: "Вто-Съб, 09:00-17:00",       image: "https://ui-avatars.com/api/?name=Sofia+Nikolova&background=4a4699&color=fff&bold=true&size=200",     lat: 42.6977, lng: 23.3219 },
-  { id: 6, name: "Д-р Йоргос Пападопулос", specialty: "Неврология",       location: "Пловдив", phone: "+359 (32) 678-9012",  email: "yorgos.papadopoulos@inreach.bg",bio: "Специалист по неврологични заболявания с комплексен подход към диагностика и лечение.",                availability: "Пон, Сря, Пет, 09:00-15:00", image: "https://ui-avatars.com/api/?name=Yorgos+Papadopoulos&background=4a4699&color=fff&bold=true&size=200",lat: 42.1354, lng: 24.7453 },
-];
+const DEFAULT_SPECIALTY = "Лекар";
+const DEFAULT_AVAILABILITY = "Няма наличен график";
+const DEFAULT_EMAIL = "Няма публичен имейл";
+
+function toDoctor(apiDoctor: DoctorApiResponse, index: number): Doctor {
+  const name = `${apiDoctor.firstName ?? ""} ${apiDoctor.lastName ?? ""}`.trim() || "Неизвестен лекар";
+  const avatarName = encodeURIComponent(name);
+
+  return {
+    id: index + 1,
+    name,
+    specialty: DEFAULT_SPECIALTY,
+    location: apiDoctor.address || "Няма адрес",
+    phone: apiDoctor.telephone || "Няма телефон",
+    email: DEFAULT_EMAIL,
+    bio: apiDoctor.description || "Няма описание",
+    availability: DEFAULT_AVAILABILITY,
+    image: `https://ui-avatars.com/api/?name=${avatarName}&background=4a4699&color=fff&bold=true&size=200`,
+    lat: 0,
+    lng: 0,
+    distance: apiDoctor.distanceKm,
+  };
+}
 
 export default function Doctors() {
   const { isEasyMode } = useEasyMode();
-  const { registrationLocation } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [maxDistance, setMaxDistance] = useState<number>(200);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [locationStatus, setLocationStatus] = useState<"loading" | "granted" | "default">("loading");
+  const [allDoctors, setAllDoctors] = useState<Doctor[]>([]);
+  const [isDoctorsLoading, setIsDoctorsLoading] = useState(true);
+  const [doctorsError, setDoctorsError] = useState<string | null>(null);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [requestSentIds, setRequestSentIds] = useState<number[]>([]);
@@ -55,43 +78,32 @@ export default function Doctors() {
   // Patient-only guard — redirects doctors to /doctor-home, guests to /login
   const { isLoading: authLoading } = useRoleGuard("PATIENT");
 
-  useEffect(() => {
-    // Seed with registration location first; geolocation will override if granted
-    if (registrationLocation) {
-      setUserLocation({ lat: registrationLocation.lat, lng: registrationLocation.lng });
-      setLocationStatus("granted");
-    }
+  const loadDoctors = useCallback(async () => {
+    setIsDoctorsLoading(true);
+    setDoctorsError(null);
 
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-          setLocationStatus("granted");
-        },
-        () => {
-          // Only fall back to Sofia default if we don't have a registration location
-          if (!registrationLocation) {
-            setUserLocation({ lat: 42.6977, lng: 23.3219 });
-            setLocationStatus("default");
-          }
-        }
-      );
-    } else if (!registrationLocation) {
-      setUserLocation({ lat: 42.6977, lng: 23.3219 });
-      setLocationStatus("default");
+    try {
+      const doctors = await api.get<DoctorApiResponse[]>("/users/doctors/nearby");
+      setAllDoctors(doctors.map(toDoctor));
+    } catch (error) {
+      console.error("Failed to load doctors:", error);
+      setDoctorsError("Неуспешно зареждане на лекарите. Моля, опитайте отново.");
+      setAllDoctors([]);
+    } finally {
+      setIsDoctorsLoading(false);
     }
-  }, [registrationLocation]);
+  }, []);
+
+  useEffect(() => {
+    loadDoctors();
+  }, [loadDoctors]);
 
   const doctorsWithDistance = useMemo(() => {
-    if (!userLocation) return ALL_DOCTORS;
-    return ALL_DOCTORS.map((d) => ({
-      ...d,
-      distance: calculateDistance(userLocation.lat, userLocation.lng, d.lat, d.lng),
-    }));
-  }, [userLocation]);
+    return allDoctors;
+  }, [allDoctors]);
 
-  const specialties = Array.from(new Set(ALL_DOCTORS.map((d) => d.specialty))).sort();
-  const locations = Array.from(new Set(ALL_DOCTORS.map((d) => d.location))).sort();
+  const specialties = Array.from(new Set(allDoctors.map((d) => d.specialty))).sort();
+  const locations = Array.from(new Set(allDoctors.map((d) => d.location))).sort();
 
   const filteredDoctors = useMemo(() => {
     return doctorsWithDistance
@@ -99,11 +111,10 @@ export default function Doctors() {
         const matchesSearch = d.name.toLowerCase().includes(searchQuery.toLowerCase()) || d.specialty.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesSpecialty = !selectedSpecialty || d.specialty === selectedSpecialty;
         const matchesLocation = !selectedLocation || d.location === selectedLocation;
-        const matchesDistance = d.distance === undefined || d.distance <= maxDistance;
-        return matchesSearch && matchesSpecialty && matchesLocation && matchesDistance;
+        return matchesSearch && matchesSpecialty && matchesLocation;
       })
       .sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
-  }, [searchQuery, selectedSpecialty, selectedLocation, doctorsWithDistance, maxDistance]);
+  }, [searchQuery, selectedSpecialty, selectedLocation, doctorsWithDistance]);
 
   const handleOpenDoctor = (doctor: Doctor) => { setSelectedDoctor(doctor); setIsModalOpen(true); };
   const handleSendRequest = (doctorId: number) => { setRequestSentIds((prev) => [...prev, doctorId]); };
@@ -120,14 +131,10 @@ export default function Doctors() {
           <p className="text-lg text-gray-600 animate-slide-in-up [animation-delay:100ms]">
             Разгледайте нашата мрежа от отдадени здравни специалисти.
           </p>
-          {locationStatus !== "loading" && (
-            <p className="text-xs text-gray-400 mt-1 flex items-center gap-1.5">
-              <svg className={`w-3 h-3 ${locationStatus === "granted" ? "text-green-500" : "text-amber-500"}`} fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-              </svg>
-              {locationStatus === "granted" ? "Вашата локация" : "София (по подразбиране)"} · в радиус от <strong className="ml-0.5">{maxDistance} км</strong>
-            </p>
-          )}
+          <p className="text-xs text-gray-400 mt-1">
+            Показват се лекари в радиус до 100 км според системата.
+          </p>
+          {doctorsError && <p className="text-xs text-red-500 mt-1">{doctorsError}</p>}
         </div>
 
         {/* ── EASY MODE: search + specialty filter always visible ── */}
@@ -207,14 +214,14 @@ export default function Doctors() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                   </svg>
                   Филтри
-                  {(selectedSpecialty || selectedLocation || maxDistance < 200) && (
-                    <span className="bg-(--clr-primary) text-white text-[10px] rounded-full px-1.5 py-0.5 leading-none">{[selectedSpecialty, selectedLocation, maxDistance < 200 ? `${maxDistance}km` : ""].filter(Boolean).length}</span>
+                  {(selectedSpecialty || selectedLocation) && (
+                    <span className="bg-(--clr-primary) text-white text-[10px] rounded-full px-1.5 py-0.5 leading-none">{[selectedSpecialty, selectedLocation].filter(Boolean).length}</span>
                   )}
                 </button>
               </div>
 
               {showFilters && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg z-50 p-5 animate-scale-in grid grid-cols-3 gap-5">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg z-50 p-5 animate-scale-in grid grid-cols-2 gap-5">
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-2">Специалност</label>
                     <select value={selectedSpecialty} onChange={(e) => setSelectedSpecialty(e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-(--clr-accent) bg-white text-xs">
@@ -229,13 +236,8 @@ export default function Doctors() {
                       {locations.map((l) => <option key={l} value={l}>{l}</option>)}
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-2">Максимална дистанция: <strong>{maxDistance} км</strong></label>
-                    <input type="range" min={10} max={500} step={10} value={maxDistance} onChange={(e) => setMaxDistance(parseInt(e.target.value))} className="w-full cursor-pointer accent-(--clr-primary)" />
-                    <div className="flex justify-between text-[10px] text-gray-400 mt-0.5"><span>10 км</span><span>500 км</span></div>
-                  </div>
-                  <div className="col-span-3 text-center pt-2 border-t border-gray-200">
-                    <button onClick={() => { setSelectedSpecialty(""); setSelectedLocation(""); setMaxDistance(200); }} className="text-xs text-(--clr-accent) hover:text-(--clr-accent-muted) font-semibold transition-all duration-200">
+                  <div className="col-span-2 text-center pt-2 border-t border-gray-200">
+                    <button onClick={() => { setSelectedSpecialty(""); setSelectedLocation(""); }} className="text-xs text-(--clr-accent) hover:text-(--clr-accent-muted) font-semibold transition-all duration-200">
                       Изчисти филтрите
                     </button>
                   </div>
@@ -246,10 +248,14 @@ export default function Doctors() {
         )}
 
         {/* ── Results ── */}
-        {filteredDoctors.length > 0 ? (
+        {isDoctorsLoading ? (
+          <div className="text-center py-16 bg-white rounded-xl shadow-md p-12 border border-gray-200 animate-scale-in">
+            <p className="text-lg text-gray-600 mb-2">Зареждане на лекарите...</p>
+          </div>
+        ) : filteredDoctors.length > 0 ? (
           <>
             <p className="text-xs text-gray-400 opacity-60 mb-6 animate-fade-in">
-              Намерени {filteredDoctors.length} лекар{filteredDoctors.length !== 1 ? "и" : ""} в радиус от {maxDistance} км
+              Намерени {filteredDoctors.length} лекар{filteredDoctors.length !== 1 ? "и" : ""}
             </p>
 
             {isEasyMode ? (
@@ -309,14 +315,24 @@ export default function Doctors() {
           </>
         ) : (
           <div className="text-center py-16 bg-white rounded-xl shadow-md p-12 border border-gray-200 animate-scale-in">
-            <p className="text-lg text-gray-600 mb-2">Не са намерени лекари{selectedSpecialty ? ` за ${selectedSpecialty}` : ""} в радиус от {maxDistance} км.</p>
-            <p className="text-sm text-gray-400 mb-6">Опитайте с по-голяма дистанция или изчистете филтрите.</p>
-            <button
-              onClick={() => { setSearchQuery(""); setSelectedSpecialty(""); setSelectedLocation(""); setMaxDistance(500); }}
-              className="px-6 py-2 bg-(--clr-primary) text-white rounded-lg font-semibold hover:bg-(--clr-primary-hover) transition-all duration-200"
-            >
-              Покажи всички лекари
-            </button>
+            <p className="text-lg text-gray-600 mb-2">Не са намерени лекари{selectedSpecialty ? ` за ${selectedSpecialty}` : ""}.</p>
+            <p className="text-sm text-gray-400 mb-6">Опитайте да изчистите филтрите.</p>
+            <div className="flex justify-center gap-3">
+              <button
+                onClick={() => { setSearchQuery(""); setSelectedSpecialty(""); setSelectedLocation(""); }}
+                className="px-6 py-2 bg-(--clr-primary) text-white rounded-lg font-semibold hover:bg-(--clr-primary-hover) transition-all duration-200"
+              >
+                Покажи всички лекари
+              </button>
+              {doctorsError && (
+                <button
+                  onClick={loadDoctors}
+                  className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-all duration-200"
+                >
+                  Опитай отново
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>

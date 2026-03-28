@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.enterprise.iam_service.dto.UserProfileResponse;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -54,7 +55,7 @@ public class UserManagementService {
         double userLat = currentUser.getLat();
         double userLng = currentUser.getLng();
 
-        return userRepository.findAll().stream()
+        List<DoctorResponse> allDoctorsSortedByDistance = userRepository.findAll().stream()
                 .filter(this::isDoctor)
                 .filter(doctor -> doctor.getLat() != null && doctor.getLng() != null)
                 .filter(doctor -> !doctor.getEgn().equals(currentUser.getEgn()))
@@ -67,9 +68,38 @@ public class UserManagementService {
                         doctor.getDescription(),
                         calculateDistanceKm(userLat, userLng, doctor.getLat(), doctor.getLng())
                 ))
-                .filter(response -> response.distanceKm() <= MAX_NEARBY_DISTANCE_KM)
                 .sorted(Comparator.comparingDouble(DoctorResponse::distanceKm))
                 .collect(Collectors.toList());
+
+        List<DoctorResponse> nearbyDoctors = allDoctorsSortedByDistance.stream()
+                .filter(response -> response.distanceKm() <= MAX_NEARBY_DISTANCE_KM)
+                .collect(Collectors.toList());
+
+        if (!nearbyDoctors.isEmpty()) {
+            return nearbyDoctors;
+        }
+
+        if (!allDoctorsSortedByDistance.isEmpty()) {
+            // Fallback: if no doctors are within the nearby radius, return closest doctors anyway.
+            return allDoctorsSortedByDistance;
+        }
+
+        // Last resort fallback: if caller is a doctor and no other doctors exist, include the caller.
+        if (isDoctor(currentUser)) {
+            List<DoctorResponse> fallback = new ArrayList<>();
+            fallback.add(new DoctorResponse(
+                    currentUser.getEgn(),
+                    currentUser.getFirstName(),
+                    currentUser.getLastName(),
+                    currentUser.getRawAddress(),
+                    currentUser.getTelephone(),
+                    currentUser.getDescription(),
+                    0.0
+            ));
+            return fallback;
+        }
+
+        return List.of();
     }
 
     // * Business Logic: Handles the secure rotation of user credentials.
@@ -109,6 +139,7 @@ public class UserManagementService {
             user.getRawAddress(),
             user.getTelephone(),
             user.getEmail(),
+            user.getRoles().stream().map(role -> role.getName()).collect(Collectors.toList()),
             doctor ? user.getDescription() : null,
             doctor
         );
