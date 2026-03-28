@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useAuth } from "../components/AuthContext";
 import { hasRole } from "./roles";
 
-type AllowedRole = "PATIENT" | "DOCTOR" | "ADMIN" | "unauthenticated" | "any";
+type AllowedRole = "PATIENT" | "DOCTOR" | "DRIVER" | "ADMIN" | "unauthenticated" | "any";
 
 /**
  * useRoleGuard — redirects the user if they don't belong on this page.
@@ -29,7 +29,7 @@ type AllowedRole = "PATIENT" | "DOCTOR" | "ADMIN" | "unauthenticated" | "any";
  *                     - unauthenticated → /login
  */
 export function useRoleGuard(allowedRole: AllowedRole) {
-  const { isAuthenticated, isLoading, isDoctor, user } = useAuth();
+  const { isAuthenticated, isLoading, isDoctor, isDriver, user } = useAuth();
   const navigate = useNavigate();
   const isAdmin = hasRole(user?.roles, "ADMIN");
 
@@ -40,11 +40,17 @@ export function useRoleGuard(allowedRole: AllowedRole) {
       case "PATIENT":
         if (!isAuthenticated) { navigate("/login", { replace: true }); return; }
         if (isDoctor)          { navigate("/doctor-home", { replace: true }); return; }
+        if (isDriver)          { navigate("/driver-home", { replace: true }); return; }
         break;
 
       case "DOCTOR":
         if (!isAuthenticated) { navigate("/login",  { replace: true }); return; }
         if (!isDoctor)         { navigate("/home",   { replace: true }); return; }
+        break;
+
+      case "DRIVER":
+        if (!isAuthenticated) { navigate("/login",  { replace: true }); return; }
+        if (!isDriver)         { navigate(isDoctor ? "/doctor-home" : "/home", { replace: true }); return; }
         break;
 
       case "ADMIN":
@@ -57,7 +63,13 @@ export function useRoleGuard(allowedRole: AllowedRole) {
 
       case "unauthenticated":
         if (isAuthenticated) {
-          navigate(isDoctor ? "/doctor-home" : "/home", { replace: true });
+          if (isDoctor) {
+            navigate("/doctor-home", { replace: true });
+          } else if (isDriver) {
+            navigate("/driver-home", { replace: true });
+          } else {
+            navigate("/home", { replace: true });
+          }
         }
         break;
 

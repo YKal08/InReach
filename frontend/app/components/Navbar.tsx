@@ -5,7 +5,7 @@ import { hasRole } from "../utils/roles";
 
 export default function Navbar() {
   const { isEasyMode, toggleEasyMode } = useEasyMode();
-  const { isAuthenticated, isDoctor, isLoading, user } = useAuth();
+  const { isAuthenticated, isDoctor, isDriver, isLoading, user } = useAuth();
   const navigate = useNavigate();
 
   const displayName = user?.firstName
@@ -13,7 +13,7 @@ export default function Navbar() {
     : user?.email?.split("@")[0] ?? "Профил";
 
   // Where "InReach" / "Home" links point
-  const homeHref = !isAuthenticated ? "/" : isDoctor ? "/doctor-home" : "/home";
+  const homeHref = !isAuthenticated ? "/" : isDoctor ? "/doctor-home" : isDriver ? "/driver-home" : "/home";
   const isAdmin = hasRole(user?.roles, "ADMIN");
 
   return (
